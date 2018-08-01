@@ -10,7 +10,7 @@ public class Canvas extends JPanel{
 	ArrayList<Shape> shapes;
 	
 	public Canvas() {
-		ArrayList<Shape> shapes = new ArrayList();
+		shapes = new ArrayList();
 	}
 	
 	@Override
