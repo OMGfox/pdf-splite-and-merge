@@ -1,27 +1,28 @@
 import java.awt.Graphics;
 import java.util.ArrayList;
-
 import javax.swing.JPanel;
 
-import shapes.Shape;
+import drawing.DrawObject;
+
 
 public class Canvas extends JPanel{
 	
-	ArrayList<Shape> shapes;
+	private static final long serialVersionUID = 1L;
+	ArrayList<DrawObject> dObjects;
 	
 	public Canvas() {
-		shapes = new ArrayList();
+		dObjects = new ArrayList<DrawObject>();
 	}
 	
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		for (Shape s : shapes) {
-			s.draw(g);
+		for (DrawObject d : dObjects) {
+			d.draw(g);
 		}
 	}
 	
-	public void addShape(Shape shape) {
-		shapes.add(shape);
+	public void addDrawObject(DrawObject drawObject) {
+		dObjects.add(drawObject);
 	}
 }
