@@ -8,8 +8,8 @@ public class Main {
 		String url = "/pdf-document.png";
 
 		Application app = new Application();
-		app.addPage(new PageFrame(1, url));
-		app.drawPageFrames();
+//		app.addPage(new PageFrame(1, url));
+//		app.drawPageFrames();
 		app.start();
 	}
 
