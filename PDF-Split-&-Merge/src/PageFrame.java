@@ -26,5 +26,7 @@ public class PageFrame extends JPanel{
 		body.setBackground(Color.PINK);
 		body.add(imagePreview);
 		
+//		this.add(body);
+		
 	}
 }

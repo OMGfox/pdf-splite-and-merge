@@ -1,11 +1,13 @@
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.Image;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
@@ -18,14 +20,7 @@ public class Application {
 	private ArrayList <Image> icons;
 	private int width;
 	private int height;
-	
-	public Application(int width, int height) {
-		mainFrame = new JFrame();
-		pageFrames = new ArrayList<PageFrame>();
-		this.width = width;
-		this.height = height;
-		init();
-	}
+
 	
 	public Application() {
 		this.width = 640;
@@ -51,6 +46,8 @@ public class Application {
 		mainFrame = new JFrame();
 		mainFrame.setSize(new Dimension(this.width, this.height));
 		mainFrame.setTitle("PDF - Split & Merge");
+		mainFrame.setResizable(false);
+		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		if (!icons.isEmpty()) {
 			mainFrame.setIconImages(icons);
@@ -62,25 +59,26 @@ public class Application {
 	}
 	
 	private void init() {
-//		drawTopPanel();
-//		drawContentFrame();
+		drawTopPanel();
+		drawContentFrame();
 	}
 	
 	private void drawTopPanel() {
 		topPanel = new JPanel();
-		topPanel.setSize(new Dimension(width, 20));
-		topPanel.setBackground(Color.BLACK);
-		mainFrame.add(topPanel);
+		topPanel.setSize(new Dimension(width, 38));
+		topPanel.setBackground(Color.LIGHT_GRAY);
 	}
 	
 	private void drawContentFrame() {
+		
 		contentFrame = new JPanel();
-		contentFrame.setSize(new Dimension(width, height));
-		contentFrame.setBackground(Color.BLUE);
-		mainFrame.add(contentFrame);
+//		contentFrame.setSize(new Dimension(width, height));
+		contentFrame.setBackground(Color.DARK_GRAY);	
+		
 	}
 	
 	public void drawPageFrames() {
+		contentFrame.setLayout(new GridLayout(pageFrames.size(), 1, 5, 10));
 		for(PageFrame pf : pageFrames) {
 			contentFrame.add(pf);
 		}
@@ -88,10 +86,20 @@ public class Application {
 	
 	public void addPage(PageFrame pageFrame) {
 		pageFrames.add(pageFrame);
+		
 	}
 	
 	public void start() {
+		mainFrame.add(topPanel);
+		mainFrame.add(contentFrame);
 		mainFrame.setVisible(true);
+		
+	}
+	
+	public void repaint() {
+		mainFrame.repaint();
+		topPanel.repaint();
+		contentFrame.repaint();
 	}
 	
 }
