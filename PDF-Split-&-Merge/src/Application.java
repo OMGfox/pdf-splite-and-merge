@@ -1,16 +1,16 @@
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Image;
+import java.awt.Insets;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
-import javax.swing.JButton;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JToggleButton;
 
 public class Application {
 	
@@ -49,8 +49,7 @@ public class Application {
 		mainFrame.setTitle("PDF - Split & Merge");
 		mainFrame.setResizable(false);
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		mainFrame.setLayout(null);
-		
+		mainFrame.setLayout(null);	
 		
 		if (!icons.isEmpty()) {
 			mainFrame.setIconImages(icons);
@@ -70,14 +69,34 @@ public class Application {
 		topPanel = new JPanel();
 		topPanel.setSize(new Dimension(width, 38));
 		topPanel.setBackground(Color.DARK_GRAY);
+		topPanel.setLayout(null);
+		
+		JToggleButton openButton = new JToggleButton();
+		// to remote the spacing between the image and button's borders
+		openButton.setMargin(new Insets(0, 0, 0, 0));
+		// to add a different background
+		openButton.setBackground(Color.DARK_GRAY);
+		// to remove the border
+		openButton.setBorder(null);
+		openButton.setBounds(10, 0, 32, 32);
+		
+		try {
+			Image openButtonIcon = ImageIO.read(getClass().getResource("/folder_blue.png"));
+			Image openButtonSelectedIcon = ImageIO.read(getClass().getResource("/folder_blue_favorites.png"));
+			openButton.setIcon(new ImageIcon(openButtonIcon));
+			openButton.setRolloverIcon(new ImageIcon(openButtonSelectedIcon));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		topPanel.add(openButton);
+		
 	}
 	
 	private void drawContentFrame() {
-		
 		contentFrame = new JPanel();
 		contentFrame.setBackground(Color.GRAY);
-		contentFrame.setLayout(null);
-		
+		contentFrame.setLayout(null);	
 	}
 	
 	public void drawPageFrames() {
@@ -94,14 +113,12 @@ public class Application {
 	
 	public void addPage(PageFrame pageFrame) {
 		pageFrames.add(pageFrame);
-		
 	}
 	
 	public void start() {
-		
 		JScrollPane sPane = new JScrollPane(contentFrame, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		sPane.setBounds(0,38, width - 15, 444);
+		sPane.setBounds(0, 38, width - 15, 444);
 		sPane.getVerticalScrollBar().setUnitIncrement(16);
 		
 		mainFrame.add(topPanel);
