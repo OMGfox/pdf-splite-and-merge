@@ -1,15 +1,16 @@
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.GridLayout;
+import java.awt.FlowLayout;
 import java.awt.Image;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 public class Application {
 	
@@ -24,7 +25,7 @@ public class Application {
 	
 	public Application() {
 		this.width = 640;
-		this.height = 480;
+		this.height = 520;
 		
 		icons = new ArrayList<Image>();
 		try {
@@ -48,6 +49,8 @@ public class Application {
 		mainFrame.setTitle("PDF - Split & Merge");
 		mainFrame.setResizable(false);
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		mainFrame.setLayout(null);
+		
 		
 		if (!icons.isEmpty()) {
 			mainFrame.setIconImages(icons);
@@ -66,22 +69,27 @@ public class Application {
 	private void drawTopPanel() {
 		topPanel = new JPanel();
 		topPanel.setSize(new Dimension(width, 38));
-		topPanel.setBackground(Color.LIGHT_GRAY);
+		topPanel.setBackground(Color.DARK_GRAY);
 	}
 	
 	private void drawContentFrame() {
 		
 		contentFrame = new JPanel();
-//		contentFrame.setSize(new Dimension(width, height));
-		contentFrame.setBackground(Color.DARK_GRAY);	
+		contentFrame.setBackground(Color.GRAY);
+		contentFrame.setLayout(null);
 		
 	}
 	
 	public void drawPageFrames() {
-		contentFrame.setLayout(new GridLayout(pageFrames.size(), 1, 5, 10));
 		for(PageFrame pf : pageFrames) {
+			int x = 5;
+			int y = (pf.getPositionNumber() - 1) * 205 + 5;
+			pf.setBounds(x, y, pf.getHeight(), pf.getHeight());
+			
 			contentFrame.add(pf);
 		}
+		
+		contentFrame.setPreferredSize(new Dimension(width, pageFrames.size() * 206));
 	}
 	
 	public void addPage(PageFrame pageFrame) {
@@ -90,8 +98,14 @@ public class Application {
 	}
 	
 	public void start() {
+		
+		JScrollPane sPane = new JScrollPane(contentFrame, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, 
+				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		sPane.setBounds(0,38, width - 15, 444);
+		sPane.getVerticalScrollBar().setUnitIncrement(16);
+		
 		mainFrame.add(topPanel);
-		mainFrame.add(contentFrame);
+		mainFrame.add(sPane);
 		mainFrame.setVisible(true);
 		
 	}
