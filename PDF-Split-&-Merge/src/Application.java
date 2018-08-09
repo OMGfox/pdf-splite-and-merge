@@ -29,17 +29,16 @@ public class Application {
 	private JToggleButton deleteAllButton;
 	private JToggleButton saveButton;
 
-	
 	public Application() {
 		this.width = 640;
 		this.height = 520;
 		
 		icons = new ArrayList<Image>();
 		try {
-			Image icon16x16 = ImageIO.read(getClass().getResourceAsStream("/icon16x16.png"));
-			Image icon32x32 = ImageIO.read(getClass().getResourceAsStream("/icon32x32.png"));
-			Image icon64x64 = ImageIO.read(getClass().getResourceAsStream("/icon64x64.png"));
-			Image icon128x128 = ImageIO.read(getClass().getResourceAsStream("/icon128x128.png"));
+			Image icon16x16 = ImageIO.read(getClass().getResourceAsStream("/icon_16x16.png"));
+			Image icon32x32 = ImageIO.read(getClass().getResourceAsStream("/icon_32x32.png"));
+			Image icon64x64 = ImageIO.read(getClass().getResourceAsStream("/icon_64x64.png"));
+			Image icon128x128 = ImageIO.read(getClass().getResourceAsStream("/icon_128x128.png"));
 			
 			icons.add(icon16x16);
 			icons.add(icon32x32);
@@ -89,10 +88,11 @@ public class Application {
 		openButton.setBounds(10, 3, 30, 30);
 		openButton.setContentAreaFilled(false);
 		openButton.addActionListener(new OpenListener());
+		openButton.setToolTipText("Добавить файл");
 		
 		try {
-			Image openButtonIcon = ImageIO.read(getClass().getResource("/folder_blue.png"));
-			Image openButtonRolloverIcon = ImageIO.read(getClass().getResource("/folder_blue_rollover.png"));
+			Image openButtonIcon = ImageIO.read(getClass().getResource("/folder_blue_48x48.png"));
+			Image openButtonRolloverIcon = ImageIO.read(getClass().getResource("/folder_blue_rollover_48x48.png"));
 			openButton.setIcon(new ImageIcon(openButtonIcon));
 			openButton.setRolloverIcon(new ImageIcon(openButtonRolloverIcon));
 		} catch (IOException e) {
@@ -106,10 +106,11 @@ public class Application {
 		saveButton.setBounds(57, 4, 30, 30);
 		saveButton.setContentAreaFilled(false);
 		saveButton.addActionListener(new SaveListener());
+		saveButton.setToolTipText("Сохранить в файл");
 		
 		try {
-			Image saveButtonIcon = ImageIO.read(getClass().getResource("/save_button.png"));
-			Image saveButtonRolloverIcon = ImageIO.read(getClass().getResource("/save_button_rollover.png"));
+			Image saveButtonIcon = ImageIO.read(getClass().getResource("/save_button_32x32.png"));
+			Image saveButtonRolloverIcon = ImageIO.read(getClass().getResource("/save_button_rollover_32x32.png"));
 			saveButton.setIcon(new ImageIcon(saveButtonIcon));
 			saveButton.setRolloverIcon(new ImageIcon(saveButtonRolloverIcon));
 		} catch (IOException e) {
@@ -123,10 +124,11 @@ public class Application {
 		deleteAllButton.setBounds(590, 3, 30, 30);
 		deleteAllButton.setContentAreaFilled(false);
 		deleteAllButton.addActionListener(new DeleteAllListener());
+		deleteAllButton.setToolTipText("Очистить всё");
 		
 		try {
-			Image deleteAllButtonIcon = ImageIO.read(getClass().getResource("/button_delete_red.png"));
-			Image deleteAllButtonRolloverIcon = ImageIO.read(getClass().getResource("/button_delete_rollover.png"));
+			Image deleteAllButtonIcon = ImageIO.read(getClass().getResource("/button_delete_red_48x48.png"));
+			Image deleteAllButtonRolloverIcon = ImageIO.read(getClass().getResource("/button_delete_rollover_48x48.png"));
 			deleteAllButton.setIcon(new ImageIcon(deleteAllButtonIcon));
 			deleteAllButton.setRolloverIcon(new ImageIcon(deleteAllButtonRolloverIcon));
 		} catch (IOException e) {
@@ -155,7 +157,7 @@ public class Application {
 		for(PageFrame pf : pageFrames) {
 			int x = 5;
 			int y = (pf.getPositionNumber() - 1) * 206 + 5;
-			pf.setBounds(x, y, pf.getHeight(), pf.getHeight());
+			pf.setBounds(x, y, pf.getWidth(), pf.getHeight());
 			
 			contentFrame.add(pf);
 		}
@@ -167,8 +169,7 @@ public class Application {
 		pageFrames.add(pageFrame);
 	}
 	
-	public void start() {
-		
+	public void start() {	
 		mainFrame.add(topPanel);
 		mainFrame.add(sPane);
 		mainFrame.setVisible(true);
