@@ -1,17 +1,10 @@
 import java.awt.Color;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.awt.Image;
 
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.JToggleButton;
 
 public class PageFrame extends JPanel{
 	private static final long serialVersionUID = 1L;
@@ -28,6 +21,7 @@ public class PageFrame extends JPanel{
 	private BeautyButton deleteButton;
 	
 	public PageFrame(int positionNumber, String url) {
+		
 		width = 597;
 		height = 200;
 		this.positionNumber = positionNumber;
@@ -49,10 +43,12 @@ public class PageFrame extends JPanel{
 		fieldPositionNumber.setHorizontalAlignment(JTextField.CENTER);
 		
 		upPositionButton = new BeautyButton("/arrow-up.png", "/arrow-up_rollover.png", "Переместить выше");	
-		upPositionButton.setBounds(310, 17, 40, 15);
+		upPositionButton.setBounds(310, 20, 38, 16);
+		upPositionButton.addActionListener(new UpPositionButtonListener());
 		
 		downPositionButton = new BeautyButton("/arrow-down.png", "/arrow-down_rollover.png", "Переместить ниже");
-		downPositionButton.setBounds(310, 36, 40, 15);
+		downPositionButton.setBounds(310, 34, 38, 16);
+		downPositionButton.addActionListener(new DownPositionButtonListener());
 		
 //		Поле изменения угла поворота
 		JLabel lableDegreeOfRotation = new JLabel("угол поворота: ");
@@ -66,19 +62,24 @@ public class PageFrame extends JPanel{
 		
 		leftRotationButton = new BeautyButton("/spinner_left.png", "/spinner_left_rollover.png", "Повернуть против часовой");
 		leftRotationButton.setBounds(310, 55, 20, 20);
+		leftRotationButton.addActionListener(new LeftRotationButtonListener());
 
 		rightRotationButton = new BeautyButton("/spinner_right.png", "/spinner_right_rollover.png", "Повернуть по часовой");
 		rightRotationButton.setBounds(330, 55, 20, 20);
+		rightRotationButton.addActionListener(new RightRotationButtonListener());
 		
 //		Дополнительные кнопки 
 		previewButton = new BeautyButton("/search_24x24.png", "/search_rollover_24x24.png", "Посмотреть");
 		previewButton.setBounds(485, 5, 24, 24);
+		previewButton.addActionListener(new PreviewButtonListener());
 		
 		saveButton = new BeautyButton("/save_button_24x24.png", "/save_button_rollover_24x24.png", "Сохранить страницу");
 		saveButton.setBounds(520, 5, 24, 24);
+		saveButton.addActionListener(new SaveButtonListener());
 		
 		deleteButton = new BeautyButton("/button_delete_red_24x24.png", "/button_delete_red_rollover_24x24.png", "Удалить страницу");
 		deleteButton.setBounds(555, 5, 24, 24);
+		deleteButton.addActionListener(new DeleteButtonListener());
 		
 //		Добавляем все элементы на PageFrame
 		add(lablePositionNumber);
