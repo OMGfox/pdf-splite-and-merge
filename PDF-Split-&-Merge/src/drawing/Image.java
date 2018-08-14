@@ -13,6 +13,22 @@ public class Image extends DrawObject{
 	private int height;
 	private BufferedImage image;
 	
+	public Image(int x, int y, BufferedImage image) {
+		this.x = x;
+		this.y = y;	
+		this.image = image;
+		this.width = image.getWidth();
+		this.height = image.getHeight();
+	}
+	
+	public Image(int x, int y, int width, int height, BufferedImage image) {	
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		this.image = image;
+	}
+	
 	public Image(int x, int y, String url) {
 		this.x = x;
 		this.y = y;

@@ -4,15 +4,23 @@ import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToggleButton;
+
+import org.apache.pdfbox.exceptions.COSVisitorException;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.PDPage;
 
 public class Application {
 	
@@ -21,6 +29,7 @@ public class Application {
 	private JPanel topPanel;
 	private JScrollPane sPane;
 	private ArrayList<PageFrame> pageFrames;
+	private ArrayList<PDDocument> documents;
 	private ArrayList <Image> icons;
 	private int width;
 	private int height;
@@ -32,6 +41,8 @@ public class Application {
 	public Application() {
 		this.width = 640;
 		this.height = 520;
+		
+		documents = new ArrayList<>();
 		
 		icons = new ArrayList<Image>();
 		try {
@@ -187,6 +198,7 @@ public class Application {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			pageFrames.clear();
+			documents.clear();
 			deleteAllButton.setSelected(false);
 			contentFrame.removeAll();
 			repaint();
@@ -197,12 +209,28 @@ public class Application {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			String url = "/pdf-document.png";
-			int currentIndex = pageFrames.size();
-			addPage(new PageFrame(currentIndex + 1, url));
-			drawPageFrames();
-			openButton.setSelected(false);
-			repaint();	
+			
+			JFileChooser fc = new JFileChooser();
+			int returnVal = fc.showOpenDialog(openButton);
+			if (returnVal == JFileChooser.APPROVE_OPTION) {
+	            File file = fc.getSelectedFile();
+	            try {
+					documents.add(PDDocument.load(file));
+					PDDocumentCatalog docCatalog = documents.get(documents.size() - 1).getDocumentCatalog();
+					List<PDPage> pages = docCatalog.getAllPages();
+					int i = pageFrames.size() + 1;
+
+					for (PDPage page : pages) {
+						addPage(new PageFrame(i, (PDPage) page));
+						i++;
+					}
+					drawPageFrames();
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+	        } 
+			repaint();
+			openButton.setSelected(false);	
 		}
 		
 	}
@@ -211,8 +239,27 @@ public class Application {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			System.out.println("Вызываем диалог сохранения");
 			saveButton.setSelected(false);
+			JFileChooser fc = new JFileChooser();
+			int returnVal = fc.showSaveDialog(saveButton);
+			if (returnVal == JFileChooser.APPROVE_OPTION) {
+				File file = fc.getSelectedFile();
+				PDDocument document;
+				try {
+					document = new PDDocument();
+					for (PageFrame pf : pageFrames) {
+						
+						document.importPage(pf.getPage());
+					}
+					document.save(file);
+					document.close();
+
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				} catch (COSVisitorException e) {
+					e.printStackTrace();
+				} 
+			}
 		}
 		
 	}
