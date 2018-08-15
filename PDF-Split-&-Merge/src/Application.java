@@ -7,14 +7,17 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 
 import org.apache.pdfbox.exceptions.COSVisitorException;
@@ -28,9 +31,10 @@ public class Application {
 	private JPanel contentFrame;
 	private JPanel topPanel;
 	private JScrollPane sPane;
-	private ArrayList<PageFrame> pageFrames;
-	private ArrayList<PDDocument> documents;
-	private ArrayList <Image> icons;
+	private JTextField numPages;
+	private LinkedList<PageFrame> pageFrames;
+	private LinkedList<PDDocument> documents;
+	private ArrayList<Image> icons;
 	private int width;
 	private int height;
 	
@@ -42,7 +46,7 @@ public class Application {
 		this.width = 640;
 		this.height = 520;
 		
-		documents = new ArrayList<>();
+		documents = new LinkedList<>();
 		
 		icons = new ArrayList<Image>();
 		try {
@@ -73,7 +77,7 @@ public class Application {
 			mainFrame.setIconImages(icons);
 		}
 		
-		pageFrames = new ArrayList<PageFrame>();
+		pageFrames = new LinkedList<PageFrame>();
 		
 		init();
 	}
@@ -88,6 +92,15 @@ public class Application {
 		topPanel.setSize(new Dimension(width, 38));
 		topPanel.setBackground(Color.DARK_GRAY);
 		topPanel.setLayout(null);
+		
+		JLabel numPagesLable = new JLabel("Страниц:");
+		numPagesLable.setForeground(new Color(0xf2f2f2));
+		numPagesLable.setBounds(450, 10, 80, 20);
+		numPages = new JTextField();
+		numPages.setEditable(false);
+		numPages.setText("0");
+		numPages.setHorizontalAlignment(JTextField.RIGHT);
+		numPages.setBounds(510, 10, 40, 20);
 		
 		openButton = new JToggleButton();
 		// to remote the spacing between the image and button's borders
@@ -147,6 +160,8 @@ public class Application {
 		}	
 		
 		
+		topPanel.add(numPagesLable);
+		topPanel.add(numPages);
 		topPanel.add(openButton);
 		topPanel.add(saveButton);
 		topPanel.add(deleteAllButton);
@@ -180,6 +195,24 @@ public class Application {
 		pageFrames.add(pageFrame);
 	}
 	
+	public void deletePage(int numPage) {
+		if (numPage == 0) {
+			pageFrames.removeFirst();
+		} else {
+			pageFrames.remove(numPage);
+		}
+		
+		int i = 1;
+		for (PageFrame pf : pageFrames) {
+			pf.setPositionNumber(i++);
+		}
+		
+		contentFrame.removeAll();
+		drawPageFrames();
+		repaint();
+
+	}
+	
 	public void start() {	
 		mainFrame.add(topPanel);
 		mainFrame.add(sPane);
@@ -190,6 +223,7 @@ public class Application {
 	public void repaint() {
 		contentFrame.setPreferredSize(new Dimension(width, pageFrames.size() * 206));
 		sPane.updateUI();
+		numPages.setText(Integer.toString(pageFrames.size()));
 		mainFrame.repaint();
 	}
 	
@@ -218,11 +252,13 @@ public class Application {
 					documents.add(PDDocument.load(file));
 					PDDocumentCatalog docCatalog = documents.get(documents.size() - 1).getDocumentCatalog();
 					List<PDPage> pages = docCatalog.getAllPages();
-					int i = pageFrames.size() + 1;
-
+					int i = pageFrames.size();
+					if (i <= 0) {
+						i = 1;
+					}
 					for (PDPage page : pages) {
-						addPage(new PageFrame(i, (PDPage) page));
-						i++;
+						addPage(new PageFrame(i++, (PDPage) page, Application.this));
+						
 					}
 					drawPageFrames();
 				} catch (IOException ex) {

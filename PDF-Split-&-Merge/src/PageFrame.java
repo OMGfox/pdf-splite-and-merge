@@ -2,12 +2,16 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import org.apache.pdfbox.exceptions.COSVisitorException;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 
 public class PageFrame extends JPanel{
@@ -25,8 +29,11 @@ public class PageFrame extends JPanel{
 	private BeautyButton deleteButton;
 	private PDPage page;
 	private BufferedImage image;
+	private Application app;
+	private JTextField fieldPageNumber;
 	
-	public PageFrame(int positionNumber, PDPage page) {
+	public PageFrame(int positionNumber, PDPage page, Application app) {
+		this.app = app;
 		width = 597;
 		height = 200;
 		this.positionNumber = positionNumber;
@@ -52,26 +59,25 @@ public class PageFrame extends JPanel{
 		
 		imagePreview = new Canvas();
 		imagePreview.setBackground(new Color(0xf2f2f2));
-//		imagePreview.addDrawObject(new drawing.Image(0, 0, 150, 180, image));
 		imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
-//		imagePreview.setBounds(10, 10, 150, 180);
 		imagePreview.setBounds(10, 10, 180, 180);
 		
 //		Поле изменения порядкового номера
-		JLabel lablePositionNumber = new JLabel("Позиция: ");
-		lablePositionNumber.setBounds(215 + x, 25, 70, 20);
+		JLabel lablePageNumber = new JLabel("Стр. №: ");
+		lablePageNumber.setBounds(225 + x, 25, 70, 20);
 		
-		JTextField fieldPositionNumber = new JTextField();
-		fieldPositionNumber.setBounds(275 + x, 25, 30, 20);
-		fieldPositionNumber.setText(Integer.toString(positionNumber));
-		fieldPositionNumber.setHorizontalAlignment(JTextField.CENTER);
+		fieldPageNumber = new JTextField();
+		fieldPageNumber.setBounds(275 + x, 25, 30, 20);
+		fieldPageNumber.setText(Integer.toString(positionNumber));
+		fieldPageNumber.setHorizontalAlignment(JTextField.CENTER);
+		fieldPageNumber.setEditable(false);
 		
 		upPositionButton = new BeautyButton("/arrow-up.png", "/arrow-up_rollover.png", "Переместить выше");	
-		upPositionButton.setBounds(313 + x, 18, 32, 16);
+		upPositionButton.setBounds(570 + x, 46, 16, 64);
 		upPositionButton.addActionListener(new UpPositionButtonListener());
 		
 		downPositionButton = new BeautyButton("/arrow-down.png", "/arrow-down_rollover.png", "Переместить ниже");
-		downPositionButton.setBounds(313 + x, 36, 32, 16);
+		downPositionButton.setBounds(570 + x, 126, 16, 64);
 		downPositionButton.addActionListener(new DownPositionButtonListener());
 		
 //		Поле изменения угла поворота
@@ -106,8 +112,8 @@ public class PageFrame extends JPanel{
 		deleteButton.addActionListener(new DeleteButtonListener());
 		
 //		Добавляем все элементы на PageFrame
-		add(lablePositionNumber);
-		add(fieldPositionNumber);
+		add(lablePageNumber);
+		add(fieldPageNumber);
 		add(upPositionButton);
 		add(leftRotationButton);
 		add(lableDegreeOfRotation);
@@ -135,6 +141,10 @@ public class PageFrame extends JPanel{
 	
 	public int getHeight() {
 		return this.height;
+	}
+	
+	public void setPositionNumber(int positionNumber) {
+		this.positionNumber = positionNumber;
 	}
 	
 	private class UpPositionButtonListener implements ActionListener{
@@ -192,7 +202,23 @@ public class PageFrame extends JPanel{
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			saveButton.setSelected(false);
-			
+			JFileChooser fc = new JFileChooser();
+			int returnVal = fc.showSaveDialog(saveButton);
+			if (returnVal == JFileChooser.APPROVE_OPTION) {
+				File file = fc.getSelectedFile();
+				PDDocument document;
+				try {
+					document = new PDDocument();
+					document.addPage(getPage());
+					document.save(file);
+					document.close();
+
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				} catch (COSVisitorException ex1) {
+					ex1.printStackTrace();
+				} 
+			}
 		}
 		
 	}
@@ -202,7 +228,7 @@ public class PageFrame extends JPanel{
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			deleteButton.setSelected(false);
-			
+			app.deletePage(getPositionNumber() - 1);
 		}
 		
 	}
