@@ -273,7 +273,7 @@ public class Application {
 					documents.add(PDDocument.load(file));
 					PDDocumentCatalog docCatalog = documents.get(documents.size() - 1).getDocumentCatalog();
 					List<PDPage> pages = docCatalog.getAllPages();
-					int i = pageFrames.size();
+					int i = pageFrames.size() + 1;
 					if (i <= 0) {
 						i = 1;
 					}

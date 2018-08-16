@@ -1,5 +1,4 @@
 import java.awt.Color;
-import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -142,7 +141,7 @@ public class PageFrame extends JPanel{
 		add(fieldDegreeOfRotation);
 		add(downPositionButton);
 		add(rightRotationButton);
-//		add(previewButton);
+		add(previewButton);
 		add(saveButton);
 		add(deleteButton);
 		add(imagePreview);
