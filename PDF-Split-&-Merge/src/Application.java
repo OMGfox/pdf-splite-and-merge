@@ -2,6 +2,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -19,6 +20,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.JViewport;
 
 import org.apache.pdfbox.exceptions.COSVisitorException;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -93,7 +95,7 @@ public class Application {
 		topPanel.setBackground(Color.DARK_GRAY);
 		topPanel.setLayout(null);
 		
-		JLabel numPagesLable = new JLabel("Страниц:");
+		JLabel numPagesLable = new JLabel("РЎС‚СЂР°РЅРёС†:");
 		numPagesLable.setForeground(new Color(0xf2f2f2));
 		numPagesLable.setBounds(450, 10, 80, 20);
 		numPages = new JTextField();
@@ -112,7 +114,7 @@ public class Application {
 		openButton.setBounds(10, 3, 30, 30);
 		openButton.setContentAreaFilled(false);
 		openButton.addActionListener(new OpenListener());
-		openButton.setToolTipText("Добавить файл");
+		openButton.setToolTipText("Р”РѕР±Р°РІРёС‚СЊ С„Р°Р№Р»");
 		
 		try {
 			Image openButtonIcon = ImageIO.read(getClass().getResource("/folder_blue_48x48.png"));
@@ -130,7 +132,7 @@ public class Application {
 		saveButton.setBounds(57, 4, 30, 30);
 		saveButton.setContentAreaFilled(false);
 		saveButton.addActionListener(new SaveListener());
-		saveButton.setToolTipText("Сохранить в файл");
+		saveButton.setToolTipText("РЎРѕС…СЂР°РЅРёС‚СЊ РІ С„Р°Р№Р»");
 		
 		try {
 			Image saveButtonIcon = ImageIO.read(getClass().getResource("/save_button_32x32.png"));
@@ -148,7 +150,7 @@ public class Application {
 		deleteAllButton.setBounds(590, 3, 30, 30);
 		deleteAllButton.setContentAreaFilled(false);
 		deleteAllButton.addActionListener(new DeleteAllListener());
-		deleteAllButton.setToolTipText("Очистить всё");
+		deleteAllButton.setToolTipText("РћС‡РёСЃС‚РёС‚СЊ РІСЃРµ");
 		
 		try {
 			Image deleteAllButtonIcon = ImageIO.read(getClass().getResource("/button_delete_red_48x48.png"));
@@ -166,6 +168,25 @@ public class Application {
 		topPanel.add(saveButton);
 		topPanel.add(deleteAllButton);
 		
+	}
+	
+	public void moveViewportSPane(int interval) {
+		JViewport viewport = sPane.getViewport();
+		Point currentPoint = viewport.getViewPosition();
+		int x = currentPoint.x;
+		int y = currentPoint.y + interval;
+		if (y < 0) {
+			viewport.setViewPosition(new Point(x, 0));
+		} else if(y > contentFrame.getHeight()) {
+			viewport.setViewPosition(new Point(x, contentFrame.getHeight() - 450));
+		} else {
+			viewport.setViewPosition(new Point(x, y));
+		}
+		
+	}
+	
+	public int getNumberPageFrames() {
+		return pageFrames.size();
 	}
 	
 	private void drawContentFrame() {
@@ -298,6 +319,19 @@ public class Application {
 			}
 		}
 		
+	}
+
+	public void swapPages(int first, int second) {
+		PageFrame temp = pageFrames.get(first - 1);
+		pageFrames.set(first - 1, pageFrames.get(second - 1));
+		pageFrames.set(second - 1, temp);
+		int i = 1;
+		for (PageFrame pf : pageFrames) {
+			pf.setPositionNumber(i++);
+		}
+		contentFrame.removeAll();
+		drawPageFrames();
+		repaint();
 	}
 
 }

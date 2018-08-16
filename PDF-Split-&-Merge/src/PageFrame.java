@@ -1,6 +1,9 @@
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -31,8 +34,11 @@ public class PageFrame extends JPanel{
 	private BufferedImage image;
 	private Application app;
 	private JTextField fieldPageNumber;
+	private JTextField fieldDegreeOfRotation;
+	private int rotation;
 	
 	public PageFrame(int positionNumber, PDPage page, Application app) {
+		rotation = 0;
 		this.app = app;
 		width = 597;
 		height = 200;
@@ -41,6 +47,7 @@ public class PageFrame extends JPanel{
 		this.image = getBufferedImage();
 		setLayout(null);
 		setBackground(new Color(0xf2f2f2));
+		addMouseListener(new PageFrameMouseListener());
 		init();
 	}
 	
@@ -55,15 +62,15 @@ public class PageFrame extends JPanel{
 	}
 
 	private void init() {
-		int x = 5; // ñäâèã ýëåìåíòîâ äëÿ àäàïòàöèè
+		int x = 5; // Ð¡Ð´Ð²Ð¸Ð³ ÑÐ»ÐµÐ¼ÐµÐ½Ñ‚Ð¾Ð² Ð´Ð»Ñ Ð°Ð´Ð°Ð¿Ñ‚Ð°Ñ†Ð¸Ð¸
 		
 		imagePreview = new Canvas();
 		imagePreview.setBackground(new Color(0xf2f2f2));
 		imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
 		imagePreview.setBounds(10, 10, 180, 180);
 		
-//		Ïîëå èçìåíåíèÿ ïîðÿäêîâîãî íîìåðà
-		JLabel lablePageNumber = new JLabel("Ñòð. ¹: ");
+//		ÐŸÐ¾Ð»Ðµ Ð½Ð¾Ð¼ÐµÑ€ ÑÑ‚Ñ€Ð°Ð½Ð¸Ñ†Ñ‹
+		JLabel lablePageNumber = new JLabel("â„– ÑÑ‚Ñ€.: ");
 		lablePageNumber.setBounds(225 + x, 25, 70, 20);
 		
 		fieldPageNumber = new JTextField();
@@ -71,47 +78,62 @@ public class PageFrame extends JPanel{
 		fieldPageNumber.setText(Integer.toString(positionNumber));
 		fieldPageNumber.setHorizontalAlignment(JTextField.CENTER);
 		fieldPageNumber.setEditable(false);
+		fieldPageNumber.addMouseListener(new PageFrameMouseListener());
 		
-		upPositionButton = new BeautyButton("/arrow-up.png", "/arrow-up_rollover.png", "Ïåðåìåñòèòü âûøå");	
+		upPositionButton = new BeautyButton("/arrow-up.png", "/arrow-up_rollover.png", "ÐŸÐµÑ€ÐµÐ¼ÐµÑÑ‚Ð¸Ñ‚ÑŒ Ð²Ð²ÐµÑ€Ñ…");	
 		upPositionButton.setBounds(570 + x, 46, 16, 64);
+		upPositionButton.setVisible(false);
 		upPositionButton.addActionListener(new UpPositionButtonListener());
+		upPositionButton.addMouseListener(new PageFrameMouseListener());
 		
-		downPositionButton = new BeautyButton("/arrow-down.png", "/arrow-down_rollover.png", "Ïåðåìåñòèòü íèæå");
+		downPositionButton = new BeautyButton("/arrow-down.png", "/arrow-down_rollover.png", "ÐŸÐµÑ€ÐµÐ¼ÐµÑÑ‚Ð¸Ñ‚ÑŒ Ð²Ð½Ð¸Ð·");
 		downPositionButton.setBounds(570 + x, 126, 16, 64);
+		downPositionButton.setVisible(false);
 		downPositionButton.addActionListener(new DownPositionButtonListener());
+		downPositionButton.addMouseListener(new PageFrameMouseListener());
 		
-//		Ïîëå èçìåíåíèÿ óãëà ïîâîðîòà
-		JLabel lableDegreeOfRotation = new JLabel("Ïîâîðîò: ");
+//		ÐŸÐ¾Ð»Ñ Ð¿Ð¾Ð²Ð¾Ñ€Ð¾Ñ‚Ð° Ð¿Ð¾ Ð¸ Ð¿Ñ€Ð¾Ñ‚Ð¸Ð² Ñ‡Ð°ÑÐ¾Ð²Ð¾Ð¹
+		JLabel lableDegreeOfRotation = new JLabel("ÐŸÐ¾Ð²Ð¾Ñ€Ð¾Ñ‚: ");
 		lableDegreeOfRotation.setBounds(215 + x, 55, 100, 20);
 		
-		JTextField fieldDegreeOfRotation = new JTextField();
+		fieldDegreeOfRotation = new JTextField();
 		fieldDegreeOfRotation.setBounds(275 + x, 55, 30, 20);
 		fieldDegreeOfRotation.setText("0");
 		fieldDegreeOfRotation.setHorizontalAlignment(JTextField.CENTER);
 		fieldDegreeOfRotation.setEditable(false);
+		fieldDegreeOfRotation.addMouseListener(new PageFrameMouseListener());
 		
-		leftRotationButton = new BeautyButton("/spinner_left.png", "/spinner_left_rollover.png", "Ïîâåðíóòü ïðîòèâ ÷àñîâîé");
+		leftRotationButton = new BeautyButton("/spinner_left.png", "/spinner_left_rollover.png", "ÐŸÐ¾Ð²ÐµÑ€Ð½ÑƒÑ‚ÑŒ Ð¿Ñ€Ð¾Ñ‚Ð¸Ð² Ñ‡Ð°ÑÐ¾Ð²Ð¾Ð¹");
 		leftRotationButton.setBounds(310 + x, 55, 20, 20);
 		leftRotationButton.addActionListener(new LeftRotationButtonListener());
+		leftRotationButton.addMouseListener(new PageFrameMouseListener());
 
-		rightRotationButton = new BeautyButton("/spinner_right.png", "/spinner_right_rollover.png", "Ïîâåðíóòü ïî ÷àñîâîé");
+		rightRotationButton = new BeautyButton("/spinner_right.png", "/spinner_right_rollover.png", "ÐŸÐ¾Ð²ÐµÑ€Ð½ÑƒÑ‚ÑŒ Ð¿Ð¾ Ñ‡Ð°ÑÐ¾Ð²Ð¾Ð¹");
 		rightRotationButton.setBounds(330 + x, 55, 20, 20);
 		rightRotationButton.addActionListener(new RightRotationButtonListener());
+		rightRotationButton.addMouseListener(new PageFrameMouseListener());
 		
-//		Äîïîëíèòåëüíûå êíîïêè 
-		previewButton = new BeautyButton("/search_24x24.png", "/search_rollover_24x24.png", "Ïîñìîòðåòü");
-		previewButton.setBounds(485, 5, 24, 24);
+//		ÐŸÑ€ÐµÐ´Ð¿Ñ€Ð¾ÑÐ¼Ð¾Ñ‚Ñ€ ÑÑ‚Ñ€Ð°Ð½Ð¸Ñ‡ÐºÐ¸
+		previewButton = new BeautyButton("/search_24x24.png", "/search_rollover_24x24.png", "ÐŸÐ¾ÑÐ¼Ð¾Ñ‚Ñ€ÐµÑ‚ÑŒ");
+		previewButton.setBounds(475, 5, 24, 24);
+		previewButton.setVisible(false);
 		previewButton.addActionListener(new PreviewButtonListener());
+		previewButton.addMouseListener(new PageFrameMouseListener());
+	
 		
-		saveButton = new BeautyButton("/save_button_24x24.png", "/save_button_rollover_24x24.png", "Ñîõðàíèòü ñòðàíèöó");
-		saveButton.setBounds(520, 5, 24, 24);
+		saveButton = new BeautyButton("/save_button_24x24.png", "/save_button_rollover_24x24.png", "Ð¡Ð¾Ñ…Ñ€Ð°Ð½Ð¸Ñ‚ÑŒ ÑÑ‚Ñ€Ð°Ð½Ð¸Ñ‡ÐºÑƒ Ð² Ñ„Ð°Ð¹Ð»");
+		saveButton.setBounds(510, 5, 24, 24);
+		saveButton.setVisible(false);
 		saveButton.addActionListener(new SaveButtonListener());
+		saveButton.addMouseListener(new PageFrameMouseListener());
 		
-		deleteButton = new BeautyButton("/button_delete_red_24x24.png", "/button_delete_red_rollover_24x24.png", "Óäàëèòü ñòðàíèöó");
-		deleteButton.setBounds(555, 5, 24, 24);
+		deleteButton = new BeautyButton("/button_delete_red_24x24.png", "/button_delete_red_rollover_24x24.png", "Ð£Ð´Ð°Ð»Ð¸Ñ‚ÑŒ");
+		deleteButton.setBounds(545, 5, 24, 24);
+		deleteButton.setVisible(false);
 		deleteButton.addActionListener(new DeleteButtonListener());
+		deleteButton.addMouseListener(new PageFrameMouseListener());
 		
-//		Äîáàâëÿåì âñå ýëåìåíòû íà PageFrame
+//		Ð”Ð¾Ð±Ð°Ð²Ð»ÐµÐ½Ð¸Ðµ ÑÐ»ÐµÐ¼ÐµÐ½Ñ‚Ð¾Ð² Ð½Ð° PageFrame
 		add(lablePageNumber);
 		add(fieldPageNumber);
 		add(upPositionButton);
@@ -120,7 +142,7 @@ public class PageFrame extends JPanel{
 		add(fieldDegreeOfRotation);
 		add(downPositionButton);
 		add(rightRotationButton);
-		add(previewButton);
+//		add(previewButton);
 		add(saveButton);
 		add(deleteButton);
 		add(imagePreview);
@@ -152,9 +174,12 @@ public class PageFrame extends JPanel{
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			upPositionButton.setSelected(false);
-			
-		}
-		
+			if (positionNumber > 1) {
+				app.swapPages(positionNumber, positionNumber - 1);
+				PageFrame.this.getLocationOnScreen();
+				app.moveViewportSPane(-206);
+			}
+		}	
 	}
 	
 	private class DownPositionButtonListener implements ActionListener{
@@ -162,7 +187,10 @@ public class PageFrame extends JPanel{
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			downPositionButton.setSelected(false);
-			
+			if (positionNumber < app.getNumberPageFrames()) {
+				app.swapPages(positionNumber, positionNumber + 1);
+				app.moveViewportSPane(206);
+			}
 		}
 		
 	}
@@ -172,7 +200,18 @@ public class PageFrame extends JPanel{
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			leftRotationButton.setSelected(false);
-			
+			rotation -= 90;
+			if (rotation == -360) rotation = 0;
+			page.setRotation(rotation);
+			fieldDegreeOfRotation.setText(Integer.toString(rotation));
+			image = getBufferedImage();
+			PageFrame.this.remove(imagePreview);
+			imagePreview = new Canvas();
+			imagePreview.setBackground(new Color(0xf2f2f2));
+			imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
+			imagePreview.setBounds(10, 10, 180, 180);
+			PageFrame.this.add(imagePreview);
+			app.repaint();
 		}
 		
 	}
@@ -182,7 +221,18 @@ public class PageFrame extends JPanel{
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			rightRotationButton.setSelected(false);
-			
+			rotation += 90;
+			if (rotation == 360) rotation = 0;
+			page.setRotation(rotation);
+			fieldDegreeOfRotation.setText(Integer.toString(rotation));
+			image = getBufferedImage();
+			PageFrame.this.remove(imagePreview);
+			imagePreview = new Canvas();
+			imagePreview.setBackground(new Color(0xf2f2f2));
+			imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
+			imagePreview.setBounds(10, 10, 180, 180);
+			PageFrame.this.add(imagePreview);
+			app.repaint();
 		}
 		
 	}
@@ -192,7 +242,6 @@ public class PageFrame extends JPanel{
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			previewButton.setSelected(false);
-			
 		}
 		
 	}
@@ -229,6 +278,48 @@ public class PageFrame extends JPanel{
 		public void actionPerformed(ActionEvent e) {
 			deleteButton.setSelected(false);
 			app.deletePage(getPositionNumber() - 1);
+		}
+		
+	}
+	
+	private class PageFrameMouseListener implements MouseListener {
+
+		@Override
+		public void mouseClicked(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent arg0) {
+			upPositionButton.setVisible(true);
+			downPositionButton.setVisible(true);
+			previewButton.setVisible(true);
+			saveButton.setVisible(true);
+			deleteButton.setVisible(true);
+			
+		}
+
+		@Override
+		public void mouseExited(MouseEvent arg0) {
+			upPositionButton.setVisible(false);
+			downPositionButton.setVisible(false);
+			previewButton.setVisible(false);
+			saveButton.setVisible(false);
+			deleteButton.setVisible(false);
+			
+		}
+
+		@Override
+		public void mousePressed(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
 		}
 		
 	}

@@ -25,4 +25,5 @@ public class Canvas extends JPanel{
 	public void addDrawObject(DrawObject drawObject) {
 		dObjects.add(drawObject);
 	}
+	
 }
