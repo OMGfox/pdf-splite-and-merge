@@ -35,7 +35,7 @@ public class PageFrame extends JPanel{
 	private JTextField fieldPageNumber;
 	private JTextField fieldDegreeOfRotation;
 	private int rotation;
-	
+
 	public PageFrame(int positionNumber, PDPage page, Application app) {
 		rotation = 0;
 		this.app = app;
@@ -59,75 +59,80 @@ public class PageFrame extends JPanel{
 		}
 		return image;
 	}
-
+	
+	public void setWidth(int width) {
+		this.width = width;
+	}
+	
+	public void setHeight(int height) {
+		this.height = height;
+	}
+	
 	private void init() {
-		int x = 5; // Сдвиг элементов для адаптации
-		
 		imagePreview = new Canvas();
 		imagePreview.setBackground(new Color(0xf2f2f2));
 		imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
-		imagePreview.setBounds(10, 10, 180, 180);
+		imagePreview.setBounds(25, 10, 180, 180);
 		
 //		Поле номер страницы
 		JLabel lablePageNumber = new JLabel("№ стр.: ");
-		lablePageNumber.setBounds(225 + x, 25, 70, 20);
+		lablePageNumber.setBounds(250, 25, 70, 20);
 		
 		fieldPageNumber = new JTextField();
-		fieldPageNumber.setBounds(275 + x, 25, 30, 20);
+		fieldPageNumber.setBounds(300, 25, 30, 20);
 		fieldPageNumber.setText(Integer.toString(positionNumber));
 		fieldPageNumber.setHorizontalAlignment(JTextField.CENTER);
 		fieldPageNumber.setEditable(false);
 		fieldPageNumber.addMouseListener(new PageFrameMouseListener());
 		
 		upPositionButton = new BeautyButton("/arrow-up.png", "/arrow-up_rollover.png", "Переместить вверх");	
-		upPositionButton.setBounds(570 + x, 46, 16, 64);
+		upPositionButton.setBounds(this.width - 40, 46, 16, 64);
 		upPositionButton.setVisible(false);
 		upPositionButton.addActionListener(new UpPositionButtonListener());
 		upPositionButton.addMouseListener(new PageFrameMouseListener());
 		
 		downPositionButton = new BeautyButton("/arrow-down.png", "/arrow-down_rollover.png", "Переместить вниз");
-		downPositionButton.setBounds(570 + x, 126, 16, 64);
+		downPositionButton.setBounds(this.width - 40, 126, 16, 64);
 		downPositionButton.setVisible(false);
 		downPositionButton.addActionListener(new DownPositionButtonListener());
 		downPositionButton.addMouseListener(new PageFrameMouseListener());
 		
 //		Поля поворота по и против часовой
 		JLabel lableDegreeOfRotation = new JLabel("Поворот: ");
-		lableDegreeOfRotation.setBounds(215 + x, 55, 100, 20);
+		lableDegreeOfRotation.setBounds(240, 55, 100, 20);
 		
 		fieldDegreeOfRotation = new JTextField();
-		fieldDegreeOfRotation.setBounds(275 + x, 55, 30, 20);
+		fieldDegreeOfRotation.setBounds(300, 55, 30, 20);
 		fieldDegreeOfRotation.setText("0");
 		fieldDegreeOfRotation.setHorizontalAlignment(JTextField.CENTER);
 		fieldDegreeOfRotation.setEditable(false);
 		fieldDegreeOfRotation.addMouseListener(new PageFrameMouseListener());
 		
 		leftRotationButton = new BeautyButton("/spinner_left.png", "/spinner_left_rollover.png", "Повернуть против часовой");
-		leftRotationButton.setBounds(310 + x, 55, 20, 20);
+		leftRotationButton.setBounds(335, 55, 20, 20);
 		leftRotationButton.addActionListener(new LeftRotationButtonListener());
 		leftRotationButton.addMouseListener(new PageFrameMouseListener());
 
 		rightRotationButton = new BeautyButton("/spinner_right.png", "/spinner_right_rollover.png", "Повернуть по часовой");
-		rightRotationButton.setBounds(330 + x, 55, 20, 20);
+		rightRotationButton.setBounds(355, 55, 20, 20);
 		rightRotationButton.addActionListener(new RightRotationButtonListener());
 		rightRotationButton.addMouseListener(new PageFrameMouseListener());
 		
 //		Предпросмотр странички
 		previewButton = new BeautyButton("/search_24x24.png", "/search_rollover_24x24.png", "Посмотреть");
-		previewButton.setBounds(475, 5, 24, 24);
+		previewButton.setBounds(this.width - 135, 5, 24, 24);
 		previewButton.setVisible(false);
 		previewButton.addActionListener(new PreviewButtonListener());
 		previewButton.addMouseListener(new PageFrameMouseListener());
-	
 		
 		saveButton = new BeautyButton("/save_button_24x24.png", "/save_button_rollover_24x24.png", "Сохранить страничку в файл");
-		saveButton.setBounds(510, 5, 24, 24);
+		saveButton.setBounds(this.width - 100, 5, 24, 24);
 		saveButton.setVisible(false);
 		saveButton.addActionListener(new SaveButtonListener());
 		saveButton.addMouseListener(new PageFrameMouseListener());
 		
 		deleteButton = new BeautyButton("/button_delete_red_24x24.png", "/button_delete_red_rollover_24x24.png", "Удалить");
-		deleteButton.setBounds(545, 5, 24, 24);
+		deleteButton.setBounds(this.width - 65, 5, 24, 24);
 		deleteButton.setVisible(false);
 		deleteButton.addActionListener(new DeleteButtonListener());
 		deleteButton.addMouseListener(new PageFrameMouseListener());
@@ -145,6 +150,14 @@ public class PageFrame extends JPanel{
 		add(saveButton);
 		add(deleteButton);
 		add(imagePreview);
+	}
+	
+	public void resizeInterface() {
+		upPositionButton.setBounds(this.width - 35, 46, 16, 64);
+		downPositionButton.setBounds(this.width - 35, 126, 16, 64);
+		previewButton.setBounds(this.width - 135, 5, 24, 24);
+		saveButton.setBounds(this.width - 100, 5, 24, 24);
+		deleteButton.setBounds(this.width - 65, 5, 24, 24);
 	}
 	
 	public PDPage getPage() {
@@ -208,7 +221,7 @@ public class PageFrame extends JPanel{
 			imagePreview = new Canvas();
 			imagePreview.setBackground(new Color(0xf2f2f2));
 			imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
-			imagePreview.setBounds(10, 10, 180, 180);
+			imagePreview.setBounds(25, 10, 180, 180);
 			PageFrame.this.add(imagePreview);
 			app.repaint();
 		}
@@ -229,7 +242,7 @@ public class PageFrame extends JPanel{
 			imagePreview = new Canvas();
 			imagePreview.setBackground(new Color(0xf2f2f2));
 			imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
-			imagePreview.setBounds(10, 10, 180, 180);
+			imagePreview.setBounds(25, 10, 180, 180);
 			PageFrame.this.add(imagePreview);
 			app.repaint();
 		}
@@ -277,6 +290,7 @@ public class PageFrame extends JPanel{
 		public void actionPerformed(ActionEvent e) {
 			deleteButton.setSelected(false);
 			app.deletePage(getPositionNumber() - 1);
+			app.resizeInterface();
 		}
 		
 	}

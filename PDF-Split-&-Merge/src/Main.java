@@ -5,7 +5,7 @@ public class Main {
 	}
 	
 	private void run() {
-		
+
 			Application app = new Application();
 			app.start();
 
