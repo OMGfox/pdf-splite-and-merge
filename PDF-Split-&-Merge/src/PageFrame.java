@@ -189,7 +189,7 @@ public class PageFrame extends JPanel{
 			if (positionNumber > 1) {
 				app.swapPages(positionNumber, positionNumber - 1);
 				PageFrame.this.getLocationOnScreen();
-				app.moveViewportSPane(-206);
+//				app.moveViewportSPane(-206);
 			}
 		}	
 	}
@@ -201,7 +201,7 @@ public class PageFrame extends JPanel{
 			downPositionButton.setSelected(false);
 			if (positionNumber < app.getNumberPageFrames()) {
 				app.swapPages(positionNumber, positionNumber + 1);
-				app.moveViewportSPane(206);
+//				app.moveViewportSPane(206);
 			}
 		}
 		
@@ -254,6 +254,7 @@ public class PageFrame extends JPanel{
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			previewButton.setSelected(false);
+			PDFViewer viewer = new PDFViewer(getPage());
 		}
 		
 	}

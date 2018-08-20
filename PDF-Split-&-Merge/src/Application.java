@@ -345,8 +345,7 @@ public class Application {
 			resizeInterface();
 			repaint();
 			openButton.setSelected(false);	
-		}
-		
+		}	
 	}
 	
 	private class SaveListener implements ActionListener{
