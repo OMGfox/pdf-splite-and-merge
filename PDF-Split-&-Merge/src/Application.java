@@ -49,9 +49,9 @@ public class Application {
 	private int width;
 	private int height;
 	
-	private JToggleButton openButton;
-	private JToggleButton deleteAllButton;
-	private JToggleButton saveButton;
+	private BeautyButton openButton;
+	private BeautyButton deleteAllButton;
+	private BeautyButton saveButton;
 
 	public Application() {
 		this.width = 640;
@@ -114,63 +114,18 @@ public class Application {
 		numPages.setText("0");
 		numPages.setHorizontalAlignment(JTextField.RIGHT);
 		numPages.setBounds(mainFrame.getWidth() - 135, 10, 40, 20);
-		
-		openButton = new JToggleButton();
-		// to remote the spacing between the image and button's borders
-		openButton.setMargin(new Insets(0, 0, 0, 0));
-		// to add a different background
-		openButton.setBackground(Color.DARK_GRAY);
-		// to remove the border
-		openButton.setBorder(null);
+
+		openButton = new BeautyButton("/folder_blue_48x48.png", "/folder_blue_rollover_48x48.png", "Добавить файл");
 		openButton.setBounds(10, 3, 30, 30);
-		openButton.setContentAreaFilled(false);
 		openButton.addActionListener(new OpenListener());
-		openButton.setToolTipText("Добавить файл");
 		
-		try {
-			Image openButtonIcon = ImageIO.read(getClass().getResource("/folder_blue_48x48.png"));
-			Image openButtonRolloverIcon = ImageIO.read(getClass().getResource("/folder_blue_rollover_48x48.png"));
-			openButton.setIcon(new ImageIcon(openButtonIcon));
-			openButton.setRolloverIcon(new ImageIcon(openButtonRolloverIcon));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		saveButton = new JToggleButton();
-		saveButton.setMargin(new Insets(0, 0, 0, 0));
-		saveButton.setBackground(Color.DARK_GRAY);
-		saveButton.setBorder(null);
+		saveButton = new BeautyButton("/save_button_32x32.png", "/save_button_rollover_32x32.png", "Сохранить в файл");
 		saveButton.setBounds(57, 4, 30, 30);
-		saveButton.setContentAreaFilled(false);
 		saveButton.addActionListener(new SaveListener());
-		saveButton.setToolTipText("Сохранить в файл");
 		
-		try {
-			Image saveButtonIcon = ImageIO.read(getClass().getResource("/save_button_32x32.png"));
-			Image saveButtonRolloverIcon = ImageIO.read(getClass().getResource("/save_button_rollover_32x32.png"));
-			saveButton.setIcon(new ImageIcon(saveButtonIcon));
-			saveButton.setRolloverIcon(new ImageIcon(saveButtonRolloverIcon));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		deleteAllButton = new JToggleButton();
-		deleteAllButton.setMargin(new Insets(0, 0, 0, 0));
-		deleteAllButton.setBackground(Color.DARK_GRAY);
-		deleteAllButton.setBorder(null);
+		deleteAllButton = new BeautyButton("/button_delete_32x32.png", "/button_delete_rollover_32x32.png", "Очистить все");
 		deleteAllButton.setBounds(topPanel.getWidth() - 35, 3, 30, 30);
-		deleteAllButton.setContentAreaFilled(false);
 		deleteAllButton.addActionListener(new DeleteAllListener());
-		deleteAllButton.setToolTipText("Очистить все");
-		
-		try {
-			Image deleteAllButtonIcon = ImageIO.read(getClass().getResource("/button_delete_32x32.png"));
-			Image deleteAllButtonRolloverIcon = ImageIO.read(getClass().getResource("/button_delete_rollover_32x32.png"));
-			deleteAllButton.setIcon(new ImageIcon(deleteAllButtonIcon));
-			deleteAllButton.setRolloverIcon(new ImageIcon(deleteAllButtonRolloverIcon));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}	
 		
 		topPanel.add(numPagesLable);
 		topPanel.add(numPages);
