@@ -31,6 +31,7 @@ public class PDFViewer {
 	private void init() {
 		viewFrame = new JFrame();
 		viewFrame.setLayout(null);
+		viewFrame.setTitle("PDF++ Previewer v0.1-alpha");
 		Toolkit tk = Toolkit.getDefaultToolkit();
 		Dimension deffaultDimension = tk.getScreenSize();
 		viewFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
@@ -54,21 +55,20 @@ public class PDFViewer {
 		viewFrame.setIconImages(icons);
 		
 		try {
-			image = page.convertToImage();
+			image = page.convertToImage(BufferedImage.TYPE_INT_RGB, 150);
 			canvas = new Canvas();
 			canvas.setLayout(null);
 			
 			if(image.getWidth() > image.getHeight()) {
 				viewFrame.setSize(new Dimension(800, 640));
 				viewFrame.setMinimumSize(new Dimension(800, 640));
-				canvas.setBounds(0, 0, viewFrame.getWidth(), viewFrame.getHeight());
-				canvas.addDrawObject(new drawing.Image(0, 0, canvas.getWidth(), canvas.getHeight(), image));
 			} else {
 				viewFrame.setSize(new Dimension(640, 800));
 				viewFrame.setMinimumSize(new Dimension(640, 800));
-				canvas.setBounds(0, 0, viewFrame.getWidth(), viewFrame.getHeight());
-				canvas.addDrawObject(new drawing.Image(0, 0, canvas.getWidth(), canvas.getHeight(), image));
+
 			}
+			canvas.setBounds(0, 0, viewFrame.getWidth(), viewFrame.getHeight());
+			canvas.addDrawObject(new drawing.Image(0, 0, canvas.getWidth(), canvas.getHeight(), image));
 			viewFrame.setLocation((int)(deffaultDimension.getWidth() - viewFrame.getWidth()) / 2, 
 					(int)(deffaultDimension.getHeight() - viewFrame.getHeight()) / 2);
 			viewFrame.add(canvas);
@@ -108,7 +108,6 @@ public class PDFViewer {
 		
 		canvas = new Canvas();
 		canvas.setLayout(null);
-//		canvas.setSize(new Dimension((int)(viewFrame.getWidth() * x), (int)(viewFrame.getHeight() * x)));
 		canvas.setBounds(0, 0, viewFrame.getWidth(), viewFrame.getHeight());
 		canvas.addDrawObject(new drawing.Image(0, 0, canvas.getWidth(), canvas.getHeight(), image));
 		buttonBiger.setBounds(canvas.getWidth() - 80, 0, 60, 20);

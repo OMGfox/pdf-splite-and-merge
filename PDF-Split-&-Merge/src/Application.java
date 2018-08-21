@@ -77,7 +77,7 @@ public class Application {
 		
 		mainFrame = new JFrame();
 		mainFrame.setSize(new Dimension(this.width, this.height));
-		mainFrame.setTitle("PDF - Split & Merge");
+		mainFrame.setTitle("PDF++ (v0.1-alpha)");
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainFrame.setLayout(null);	
 		mainFrame.setLocationRelativeTo(null); // to center a main window 
@@ -164,8 +164,8 @@ public class Application {
 		deleteAllButton.setToolTipText("Очистить все");
 		
 		try {
-			Image deleteAllButtonIcon = ImageIO.read(getClass().getResource("/button_delete_red_48x48.png"));
-			Image deleteAllButtonRolloverIcon = ImageIO.read(getClass().getResource("/button_delete_rollover_48x48.png"));
+			Image deleteAllButtonIcon = ImageIO.read(getClass().getResource("/button_delete_32x32.png"));
+			Image deleteAllButtonRolloverIcon = ImageIO.read(getClass().getResource("/button_delete_rollover_32x32.png"));
 			deleteAllButton.setIcon(new ImageIcon(deleteAllButtonIcon));
 			deleteAllButton.setRolloverIcon(new ImageIcon(deleteAllButtonRolloverIcon));
 		} catch (IOException e) {
@@ -326,6 +326,7 @@ public class Application {
 	            try {
 					documents.add(PDDocument.load(file));
 					PDDocumentCatalog docCatalog = documents.get(documents.size() - 1).getDocumentCatalog();
+					@SuppressWarnings("unchecked")
 					List<PDPage> pages = docCatalog.getAllPages();
 					int i = pageFrames.size() + 1;
 					if (i <= 0) {
@@ -374,15 +375,11 @@ public class Application {
 							document.importPage(pf.getPage());
 						}
 						
-						String[] splitedPath = file.getPath().split(".");
-						if (splitedPath.length > 0) {
-							if (splitedPath[splitedPath.length - 1] == "pdf") {
-								document.save(file.getPath() + ".pdf");
-							} else {
-								document.save(file.getPath());
-							}
+						String[] splitedPath = file.getPath().split("\\.");
+						if (splitedPath[splitedPath.length - 1].equals("pdf")) {
+							document.save(file.getPath());
 						} else {
-							document.save(file.getPath() + ".pdf");
+							document.save(file.getPath() + ".pdf");	
 						}
 						
 						lastPath = file.getParent();

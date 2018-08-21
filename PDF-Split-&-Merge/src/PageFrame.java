@@ -35,6 +35,7 @@ public class PageFrame extends JPanel{
 	private JTextField fieldPageNumber;
 	private JTextField fieldDegreeOfRotation;
 	private int rotation;
+	private String lastPath;
 
 	public PageFrame(int positionNumber, PDPage page, Application app) {
 		rotation = 0;
@@ -73,6 +74,8 @@ public class PageFrame extends JPanel{
 		imagePreview.setBackground(new Color(0xf2f2f2));
 		imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
 		imagePreview.setBounds(25, 10, 180, 180);
+		imagePreview.addMouseListener(new CanvasMouseListener());
+		imagePreview.addMouseListener(new PageFrameMouseListener());
 		
 //		Поле номер страницы
 		JLabel lablePageNumber = new JLabel("№ стр.: ");
@@ -120,10 +123,11 @@ public class PageFrame extends JPanel{
 		
 //		Предпросмотр странички
 		previewButton = new BeautyButton("/search_24x24.png", "/search_rollover_24x24.png", "Посмотреть");
-		previewButton.setBounds(this.width - 135, 5, 24, 24);
+		previewButton.setBounds(180, 25, 24, 24);
 		previewButton.setVisible(false);
 		previewButton.addActionListener(new PreviewButtonListener());
 		previewButton.addMouseListener(new PageFrameMouseListener());
+		previewButton.addMouseListener(new CanvasMouseListener());
 		
 		saveButton = new BeautyButton("/save_button_24x24.png", "/save_button_rollover_24x24.png", "Сохранить страничку в файл");
 		saveButton.setBounds(this.width - 100, 5, 24, 24);
@@ -155,7 +159,7 @@ public class PageFrame extends JPanel{
 	public void resizeInterface() {
 		upPositionButton.setBounds(this.width - 35, 46, 16, 64);
 		downPositionButton.setBounds(this.width - 35, 126, 16, 64);
-		previewButton.setBounds(this.width - 135, 5, 24, 24);
+		previewButton.setBounds(180, 25, 24, 24);
 		saveButton.setBounds(this.width - 100, 5, 24, 24);
 		deleteButton.setBounds(this.width - 65, 5, 24, 24);
 	}
@@ -222,6 +226,8 @@ public class PageFrame extends JPanel{
 			imagePreview.setBackground(new Color(0xf2f2f2));
 			imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
 			imagePreview.setBounds(25, 10, 180, 180);
+			imagePreview.addMouseListener(new CanvasMouseListener());
+			imagePreview.addMouseListener(new PageFrameMouseListener());
 			PageFrame.this.add(imagePreview);
 			app.repaint();
 		}
@@ -243,6 +249,8 @@ public class PageFrame extends JPanel{
 			imagePreview.setBackground(new Color(0xf2f2f2));
 			imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
 			imagePreview.setBounds(25, 10, 180, 180);
+			imagePreview.addMouseListener(new CanvasMouseListener());
+			imagePreview.addMouseListener(new PageFrameMouseListener());
 			PageFrame.this.add(imagePreview);
 			app.repaint();
 		}
@@ -254,6 +262,8 @@ public class PageFrame extends JPanel{
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			previewButton.setSelected(false);
+			
+			@SuppressWarnings("unused")
 			PDFViewer viewer = new PDFViewer(getPage());
 		}
 		
@@ -264,7 +274,14 @@ public class PageFrame extends JPanel{
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			saveButton.setSelected(false);
-			JFileChooser fc = new JFileChooser();
+			
+			JFileChooser fc;
+			if (lastPath == null) {
+				fc = new JFileChooser();
+			} else {
+				fc = new JFileChooser(lastPath);
+			}
+			
 			int returnVal = fc.showSaveDialog(saveButton);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				File file = fc.getSelectedFile();
@@ -272,7 +289,15 @@ public class PageFrame extends JPanel{
 				try {
 					document = new PDDocument();
 					document.addPage(getPage());
-					document.save(file);
+					
+					String[] splitedPath = file.getPath().split("\\.");
+					if (splitedPath[splitedPath.length - 1].equals("pdf")) {
+						document.save(file.getPath());
+					} else {
+						document.save(file.getPath() + ".pdf");	
+					}
+				
+					lastPath = file.getParent();
 					document.close();
 
 				} catch (IOException ex) {
@@ -308,7 +333,7 @@ public class PageFrame extends JPanel{
 		public void mouseEntered(MouseEvent arg0) {
 			upPositionButton.setVisible(true);
 			downPositionButton.setVisible(true);
-			previewButton.setVisible(true);
+//			previewButton.setVisible(true);
 			saveButton.setVisible(true);
 			deleteButton.setVisible(true);
 			
@@ -318,7 +343,7 @@ public class PageFrame extends JPanel{
 		public void mouseExited(MouseEvent arg0) {
 			upPositionButton.setVisible(false);
 			downPositionButton.setVisible(false);
-			previewButton.setVisible(false);
+//			previewButton.setVisible(false);
 			saveButton.setVisible(false);
 			deleteButton.setVisible(false);
 			
@@ -337,5 +362,41 @@ public class PageFrame extends JPanel{
 		}
 		
 	}
+	
+	private class CanvasMouseListener implements MouseListener {
+
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {
+			previewButton.setVisible(true);
+			
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e) {
+			previewButton.setVisible(false);
+			
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			@SuppressWarnings("unused")
+			PDFViewer viewer = new PDFViewer(getPage());
+			
+		}
+		
+	}
+	
 	
 }
