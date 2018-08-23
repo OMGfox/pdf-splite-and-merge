@@ -3,10 +3,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 
+import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -24,8 +27,6 @@ public class PageFrame extends JPanel{
 	private int height;
 	private BeautyButton leftRotationButton;
 	private BeautyButton rightRotationButton;
-	private BeautyButton upPositionButton;
-	private BeautyButton downPositionButton;
 	private BeautyButton previewButton;
 	private BeautyButton saveButton;
 	private BeautyButton deleteButton;
@@ -36,18 +37,26 @@ public class PageFrame extends JPanel{
 	private JTextField fieldDegreeOfRotation;
 	private int rotation;
 	private String lastPath;
+	private boolean isSelected;
+	private int initialX;
+	private int initialY;
 
 	public PageFrame(int positionNumber, PDPage page, Application app) {
-		rotation = 0;
+		
 		this.app = app;
-		width = 597;
-		height = 200;
 		this.positionNumber = positionNumber;
 		this.page = page;
-		this.image = getBufferedImage();
+		isSelected = false;
+		rotation = 0;
+		width = 597;
+		height = 200;
+		image = getBufferedImage();
+		setBorder(BorderFactory.createRaisedBevelBorder());
 		setLayout(null);
 		setBackground(new Color(0xf2f2f2));
 		addMouseListener(new PageFrameMouseListener());
+		addMouseListener(new DragPageFrameMouseListener());
+		addMouseMotionListener(new PageFrameMouseMoutionListener());
 		init();
 	}
 	
@@ -87,18 +96,6 @@ public class PageFrame extends JPanel{
 		fieldPageNumber.setHorizontalAlignment(JTextField.CENTER);
 		fieldPageNumber.setEditable(false);
 		fieldPageNumber.addMouseListener(new PageFrameMouseListener());
-		
-		upPositionButton = new BeautyButton("/arrow-up.png", "/arrow-up_rollover.png", "Переместить вверх");	
-		upPositionButton.setBounds(this.width - 40, 46, 16, 64);
-		upPositionButton.setVisible(false);
-		upPositionButton.addActionListener(new UpPositionButtonListener());
-		upPositionButton.addMouseListener(new PageFrameMouseListener());
-		
-		downPositionButton = new BeautyButton("/arrow-down.png", "/arrow-down_rollover.png", "Переместить вниз");
-		downPositionButton.setBounds(this.width - 40, 126, 16, 64);
-		downPositionButton.setVisible(false);
-		downPositionButton.addActionListener(new DownPositionButtonListener());
-		downPositionButton.addMouseListener(new PageFrameMouseListener());
 		
 //		Поля поворота по и против часовой
 		JLabel lableDegreeOfRotation = new JLabel("Поворот: ");
@@ -144,11 +141,9 @@ public class PageFrame extends JPanel{
 //		Добавление элементов на PageFrame
 		add(lablePageNumber);
 		add(fieldPageNumber);
-		add(upPositionButton);
 		add(leftRotationButton);
 		add(lableDegreeOfRotation);
 		add(fieldDegreeOfRotation);
-		add(downPositionButton);
 		add(rightRotationButton);
 		add(previewButton);
 		add(saveButton);
@@ -157,8 +152,6 @@ public class PageFrame extends JPanel{
 	}
 	
 	public void resizeInterface() {
-		upPositionButton.setBounds(this.width - 35, 46, 16, 64);
-		downPositionButton.setBounds(this.width - 35, 126, 16, 64);
 		previewButton.setBounds(180, 25, 24, 24);
 		saveButton.setBounds(this.width - 100, 5, 24, 24);
 		deleteButton.setBounds(this.width - 65, 5, 24, 24);
@@ -185,32 +178,10 @@ public class PageFrame extends JPanel{
 		this.positionNumber = positionNumber;
 	}
 	
-	private class UpPositionButtonListener implements ActionListener{
-
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			upPositionButton.setSelected(false);
-			if (positionNumber > 1) {
-				app.swapPages(positionNumber, positionNumber - 1);
-				PageFrame.this.getLocationOnScreen();
-//				app.moveViewportSPane(-206);
-			}
-		}	
+	public boolean isSelected() {
+		return isSelected;
 	}
-	
-	private class DownPositionButtonListener implements ActionListener{
 
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			downPositionButton.setSelected(false);
-			if (positionNumber < app.getNumberPageFrames()) {
-				app.swapPages(positionNumber, positionNumber + 1);
-//				app.moveViewportSPane(206);
-			}
-		}
-		
-	}
-	
 	private class LeftRotationButtonListener implements ActionListener{
 
 		@Override
@@ -321,6 +292,42 @@ public class PageFrame extends JPanel{
 		
 	}
 	
+	private class DragPageFrameMouseListener implements MouseListener {
+
+		@Override
+		public void mouseClicked(MouseEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent arg0) {
+			setBorder(BorderFactory.createRaisedBevelBorder());
+			
+		}
+
+		@Override
+		public void mouseExited(MouseEvent arg0) {
+
+			setBorder(BorderFactory.createRaisedBevelBorder());
+			
+		}
+
+		@Override
+		public void mousePressed(MouseEvent arg0) {
+			PageFrame.this.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, Color.ORANGE));
+			isSelected = true;
+			
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent arg0) {
+			setBorder(BorderFactory.createRaisedBevelBorder());
+			isSelected = false;
+		}
+		
+	}
+	
 	private class PageFrameMouseListener implements MouseListener {
 
 		@Override
@@ -331,9 +338,6 @@ public class PageFrame extends JPanel{
 
 		@Override
 		public void mouseEntered(MouseEvent arg0) {
-			upPositionButton.setVisible(true);
-			downPositionButton.setVisible(true);
-//			previewButton.setVisible(true);
 			saveButton.setVisible(true);
 			deleteButton.setVisible(true);
 			
@@ -341,9 +345,6 @@ public class PageFrame extends JPanel{
 
 		@Override
 		public void mouseExited(MouseEvent arg0) {
-			upPositionButton.setVisible(false);
-			downPositionButton.setVisible(false);
-//			previewButton.setVisible(false);
 			saveButton.setVisible(false);
 			deleteButton.setVisible(false);
 			
@@ -351,14 +352,13 @@ public class PageFrame extends JPanel{
 
 		@Override
 		public void mousePressed(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
+			initialX = (int)arg0.getX();
+			initialY = (int)arg0.getY();
 		}
 
 		@Override
 		public void mouseReleased(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-			
+			app.resizeInterface();
 		}
 		
 	}
@@ -398,5 +398,36 @@ public class PageFrame extends JPanel{
 		
 	}
 	
-	
+	private class PageFrameMouseMoutionListener implements MouseMotionListener{
+
+		@Override
+		public void mouseDragged(MouseEvent e) {
+			
+			if (isSelected()) {
+				int dx = e.getX() - initialX;
+				int dy = e.getY() - initialY;
+				int x = PageFrame.this.getX() + dx;
+				int y = PageFrame.this.getY() + dy;
+				PageFrame.this.setLocation(x, y);
+				PageFrame.this.getParent().setComponentZOrder(PageFrame.this, 0);
+				for (PageFrame pf : app.getPageFrames()) {
+					if ((pf.getY() < y + pf.height / 2 &&
+						pf.getY() + pf.height /2 > y + pf.height / 2) ||
+						pf.getY() + pf.height /2  < y + pf.height / 2 &&
+						pf.getY() + pf.height > y + pf.height / 2) {
+//					if(pf.getY() < y && pf.getY() + pf.height > y) {
+						app.swapPages(PageFrame.this.getPositionNumber(), pf.getPositionNumber());
+					}
+				}
+			}
+			
+		}
+
+		@Override
+		public void mouseMoved(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+	}
 }

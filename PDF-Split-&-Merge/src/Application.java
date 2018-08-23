@@ -1,12 +1,13 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Image;
-import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.event.WindowStateListener;
@@ -17,7 +18,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -25,7 +25,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.JToggleButton;
 import javax.swing.JViewport;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -135,6 +134,10 @@ public class Application {
 		
 	}
 	
+	public LinkedList<PageFrame> getPageFrames(){
+		return pageFrames;
+	}
+	
 	public void moveViewportSPane(int interval) {
 		JViewport viewport = sPane.getViewport();
 		Point currentPoint = viewport.getViewPosition();
@@ -172,7 +175,6 @@ public class Application {
 			} else {
 				pf.setWidth(mainFrame.getWidth() - 30);
 			}
-			
 			int x = (mainFrame.getWidth() - pf.getWidth() - 15) / 2;
 			int y = (pf.getPositionNumber() - 1) * 206 + 5;
 			pf.setBounds(x, y, pf.getWidth(), pf.getHeight());
@@ -417,4 +419,5 @@ public class Application {
 		}
 		
 	}
+	
 }
