@@ -7,7 +7,6 @@ import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
@@ -40,9 +39,11 @@ public class PageFrame extends JPanel{
 	private boolean isSelected;
 	private int initialX;
 	private int initialY;
+	private long startTime;
+	private long deltaTime;
 
 	public PageFrame(int positionNumber, PDPage page, Application app) {
-		
+
 		this.app = app;
 		this.positionNumber = positionNumber;
 		this.page = page;
@@ -56,7 +57,7 @@ public class PageFrame extends JPanel{
 		setBackground(new Color(0xf2f2f2));
 		addMouseListener(new PageFrameMouseListener());
 		addMouseListener(new DragPageFrameMouseListener());
-		addMouseMotionListener(new PageFrameMouseMoutionListener());
+		addMouseMotionListener(new DragPageFrameMouseListener());
 		init();
 	}
 	
@@ -292,7 +293,7 @@ public class PageFrame extends JPanel{
 		
 	}
 	
-	private class DragPageFrameMouseListener implements MouseListener {
+	private class DragPageFrameMouseListener implements MouseListener, MouseMotionListener {
 
 		@Override
 		public void mouseClicked(MouseEvent arg0) {
@@ -314,16 +315,36 @@ public class PageFrame extends JPanel{
 		}
 
 		@Override
-		public void mousePressed(MouseEvent arg0) {
+		public void mousePressed(MouseEvent e) {
 			PageFrame.this.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, Color.ORANGE));
 			isSelected = true;
-			
+			initialX = e.getX();
+			initialY = e.getY();
+			new SwapThread();
+			new MoveThread();
 		}
 
 		@Override
 		public void mouseReleased(MouseEvent arg0) {
 			setBorder(BorderFactory.createRaisedBevelBorder());
-			isSelected = false;
+			isSelected = false;	
+		}
+
+		@Override
+		public void mouseDragged(MouseEvent e) {
+			PageFrame.this.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, Color.ORANGE));
+			PageFrame.this.getParent().setComponentZOrder(PageFrame.this, 0);
+			int dx = e.getX() - initialX;
+			int dy = e.getY() - initialY;
+			int x = PageFrame.this.getX() + dx;
+			int y = PageFrame.this.getY() + dy;
+			PageFrame.this.setLocation(x, y);
+		}
+
+		@Override
+		public void mouseMoved(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
 		}
 		
 	}
@@ -352,8 +373,7 @@ public class PageFrame extends JPanel{
 
 		@Override
 		public void mousePressed(MouseEvent arg0) {
-			initialX = (int)arg0.getX();
-			initialY = (int)arg0.getY();
+			
 		}
 
 		@Override
@@ -398,35 +418,72 @@ public class PageFrame extends JPanel{
 		
 	}
 	
-	private class PageFrameMouseMoutionListener implements MouseMotionListener{
-
+	private class MoveThread implements Runnable {
+		private Thread thread;
+		private int offset;
+		
+		public MoveThread() {
+			thread = new Thread(this);
+			thread.start();
+		}
+		
 		@Override
-		public void mouseDragged(MouseEvent e) {
-			
-			if (isSelected()) {
-				int dx = e.getX() - initialX;
-				int dy = e.getY() - initialY;
-				int x = PageFrame.this.getX() + dx;
-				int y = PageFrame.this.getY() + dy;
-				PageFrame.this.setLocation(x, y);
-				PageFrame.this.getParent().setComponentZOrder(PageFrame.this, 0);
-				for (PageFrame pf : app.getPageFrames()) {
-					if ((pf.getY() < y + pf.height / 2 &&
-						pf.getY() + pf.height /2 > y + pf.height / 2) ||
-						pf.getY() + pf.height /2  < y + pf.height / 2 &&
-						pf.getY() + pf.height > y + pf.height / 2) {
-//					if(pf.getY() < y && pf.getY() + pf.height > y) {
-						app.swapPages(PageFrame.this.getPositionNumber(), pf.getPositionNumber());
+		public void run() {
+			startTime = System.currentTimeMillis();
+			deltaTime = System.currentTimeMillis() - startTime;
+			while (isSelected) {
+				if (deltaTime / 1000F >= 0.001) {
+					if(PageFrame.this.getY() <= app.getViewport().getViewPosition().getY() - 10 && app.getViewport().getViewPosition().getY() > 0) {
+						offset = -1;
+						app.moveViewportSPane(offset);
+						PageFrame.this.setLocation(PageFrame.this.getX(), PageFrame.this.getY() + offset);
 					}
+					if(PageFrame.this.getY() + PageFrame.this.height >= app.getViewport().getViewPosition().getY() + app.getViewport().getHeight() + 10 &&
+							app.getViewport().getViewPosition().getY() + app.getViewport().getHeight() < app.getContentPanelPreferSize().getHeight()) {
+						offset = +1;
+						app.moveViewportSPane(offset);
+//						if (app.getViewport().getViewPosition().getY() <= app.getViewport().getViewPosition().getY() + app.getViewport().getHeight()) {
+//							PageFrame.this.setLocation(PageFrame.this.getX(), PageFrame.this.getY() + offset);
+//						}
+						PageFrame.this.setLocation(PageFrame.this.getX(), PageFrame.this.getY() + offset);
+					}
+					
+					startTime = System.currentTimeMillis();
+					
 				}
+				deltaTime = System.currentTimeMillis() - startTime;
 			}
 			
 		}
-
-		@Override
-		public void mouseMoved(MouseEvent e) {
-			// TODO Auto-generated method stub
+		
+	}
+	
+	private class SwapThread implements Runnable{
+		private Thread thread;
+		
+		public SwapThread() {
+			this.thread = new Thread(this);
+			thread.start();
+		}
 			
+		@Override
+		public void run() {
+			while (PageFrame.this.isSelected) {
+				check();
+			}
+		}
+		
+		private void check() {
+			int y = PageFrame.this.getY();
+			for (PageFrame pf : app.getPageFrames()) {
+				if (pf.isSelected) {
+					continue;
+				}
+				if ((pf.getY() < y + pf.height / 2 && pf.getY() + pf.height / 2 > y + pf.height / 2 ||
+						pf.getY() + pf.height / 2 < y + pf.height / 2 && pf.getY() + pf.height > y + pf.height /2)) {
+					app.swapPages(PageFrame.this.getPositionNumber(), pf.getPositionNumber());
+				}
+			}
 		}
 		
 	}

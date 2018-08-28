@@ -6,8 +6,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.event.WindowStateListener;
@@ -99,6 +97,10 @@ public class Application {
 		drawContentFrame();
 	}
 	
+	public Dimension getContentPanelPreferSize() {
+		return contentFrame.getPreferredSize();
+	}
+	
 	private void drawTopPanel() {
 		topPanel = new JPanel();
 		topPanel.setSize(new Dimension(mainFrame.getWidth() - 15, 38));
@@ -136,6 +138,11 @@ public class Application {
 	
 	public LinkedList<PageFrame> getPageFrames(){
 		return pageFrames;
+	}
+	
+	public JViewport getViewport() {
+		return sPane.getViewport();
+		
 	}
 	
 	public void moveViewportSPane(int interval) {
@@ -279,6 +286,7 @@ public class Application {
 			fc.setFileFilter(filter);
 			int returnVal = fc.showOpenDialog(openButton);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
+				mainFrame.setResizable(false);
 	            File file = fc.getSelectedFile();
 	            try {
 					documents.add(PDDocument.load(file));
@@ -303,6 +311,7 @@ public class Application {
 			resizeInterface();
 			repaint();
 			openButton.setSelected(false);	
+			mainFrame.setResizable(true);
 		}	
 	}
 	
