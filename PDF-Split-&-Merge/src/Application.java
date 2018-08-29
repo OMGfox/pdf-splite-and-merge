@@ -16,6 +16,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -45,15 +46,18 @@ public class Application {
 	private ArrayList<Image> icons;
 	private int width;
 	private int height;
+	private Status status;
+	private ProcessScene processScene;
 	
 	private BeautyButton openButton;
 	private BeautyButton deleteAllButton;
 	private BeautyButton saveButton;
 
 	public Application() {
+		
 		this.width = 640;
 		this.height = 520;
-		
+		status = Status.EMPTY;
 		documents = new LinkedList<>();
 		
 		icons = new ArrayList<Image>();
@@ -104,7 +108,8 @@ public class Application {
 	private void drawTopPanel() {
 		topPanel = new JPanel();
 		topPanel.setSize(new Dimension(mainFrame.getWidth() - 15, 38));
-		topPanel.setBackground(Color.DARK_GRAY);
+		topPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, new Color(209,231,81)));
+		topPanel.setBackground(new Color(0, 0, 0));
 		topPanel.setLayout(null);
 		
 		numPagesLable = new JLabel("Страниц:");
@@ -166,7 +171,7 @@ public class Application {
 	
 	private void drawContentFrame() {
 		contentFrame = new JPanel();
-		contentFrame.setBackground(Color.GRAY);
+		contentFrame.setBackground(Color.WHITE);
 		contentFrame.setLayout(null);
 		
 		sPane = new JScrollPane(contentFrame, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
@@ -220,9 +225,16 @@ public class Application {
 	}
 	
 	public void repaint() {
-		contentFrame.setPreferredSize(new Dimension(width, pageFrames.size() * 206));
-		sPane.updateUI();
-		numPages.setText(Integer.toString(pageFrames.size()));
+		if (contentFrame != null) {
+			contentFrame.setPreferredSize(new Dimension(width, pageFrames.size() * 206));
+		}
+		if (sPane != null) {
+			sPane.updateUI();
+		}
+		if (numPages != null) {
+			numPages.setText(Integer.toString(pageFrames.size()));
+		}
+
 		mainFrame.repaint();
 	}
 
@@ -241,15 +253,27 @@ public class Application {
 	
 	public void resizeInterface() {
 		topPanel.setSize(new Dimension(mainFrame.getWidth() - 15, 38));
-		deleteAllButton.setBounds(topPanel.getWidth() - 35, 3, 30, 30);
-		sPane.setBounds(0, 38, mainFrame.getWidth() - 15, mainFrame.getHeight() - 75);
-		if (contentFrame.getPreferredSize().getHeight() > contentFrame.getSize().getHeight()) {
-			sPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-		} else {
-			sPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		if (deleteAllButton != null) {
+			deleteAllButton.setBounds(topPanel.getWidth() - 35, 3, 30, 30);
 		}
-		numPages.setBounds(mainFrame.getWidth() - 135, 10, 40, 20);
-		numPagesLable.setBounds(mainFrame.getWidth() - 195, 10, 80, 20);
+		if (sPane != null) {
+			sPane.setBounds(0, 38, mainFrame.getWidth() - 15, mainFrame.getHeight() - 75);
+		}
+		if (contentFrame != null) {
+			if (contentFrame.getPreferredSize().getHeight() > contentFrame.getSize().getHeight()) {
+				sPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+			} else {
+				sPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+			}
+		}
+		if (numPages != null) {
+			numPages.setBounds(mainFrame.getWidth() - 135, 10, 40, 20);
+		}
+		
+		if (numPagesLable != null) {
+			numPagesLable.setBounds(mainFrame.getWidth() - 195, 10, 80, 20);
+		}
+		
 		
 		if (pageFrames.size() > 0) {
 			contentFrame.removeAll();
@@ -257,6 +281,18 @@ public class Application {
 		}
 		
 		repaint();
+	}
+
+	private void hidePageFrames(){
+		for (PageFrame pf : pageFrames) {
+			pf.setVisible(false);
+		}
+	}
+	
+	private void showPageFrames() {
+		for (PageFrame pf : pageFrames) {
+			pf.setVisible(true);
+		}
 	}
 	
 	private class DeleteAllListener implements ActionListener{
@@ -268,6 +304,7 @@ public class Application {
 			deleteAllButton.setSelected(false);
 			contentFrame.removeAll();
 			resizeInterface();
+			status = Status.EMPTY;
 		}
 	}
 	
@@ -286,32 +323,14 @@ public class Application {
 			fc.setFileFilter(filter);
 			int returnVal = fc.showOpenDialog(openButton);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
-				mainFrame.setResizable(false);
-	            File file = fc.getSelectedFile();
-	            try {
-					documents.add(PDDocument.load(file));
-					PDDocumentCatalog docCatalog = documents.get(documents.size() - 1).getDocumentCatalog();
-					@SuppressWarnings("unchecked")
-					List<PDPage> pages = docCatalog.getAllPages();
-					int i = pageFrames.size() + 1;
-					if (i <= 0) {
-						i = 1;
-					}
-					for (PDPage page : pages) {
-						addPage(new PageFrame(i++, (PDPage) page, Application.this));
-					}
-					
-					drawPageFrames();
-					lastPath = file.getParent();
-					
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				} 
+				status = Status.OPENING;
+				new OpeningThread(fc);
+				processScene = new ProcessScene(mainFrame.getWidth(), mainFrame.getHeight(), status, mainFrame);
 	        } 
-			resizeInterface();
 			repaint();
+			
 			openButton.setSelected(false);	
-			mainFrame.setResizable(true);
+			
 		}	
 	}
 	
@@ -332,31 +351,9 @@ public class Application {
 				fc.setFileFilter(filter);
 				int returnVal = fc.showSaveDialog(saveButton);
 				if (returnVal == JFileChooser.APPROVE_OPTION) {
-					File file = fc.getSelectedFile();
-					PDDocument document;
-					try {
-						document = new PDDocument();
-						for (PageFrame pf : pageFrames) {
-							
-							document.importPage(pf.getPage());
-						}
-						
-						String[] splitedPath = file.getPath().split("\\.");
-						if (splitedPath[splitedPath.length - 1].equals("pdf")) {
-							document.save(file.getPath());
-						} else {
-							document.save(file.getPath() + ".pdf");	
-						}
-						
-						lastPath = file.getParent();
-						
-						document.close();
-
-					} catch (IOException ex) {
-						ex.printStackTrace();
-					} catch (COSVisitorException e) {
-						e.printStackTrace();
-					} 
+					status = Status.SAVING;
+					new SavingThread(fc);
+					processScene = new ProcessScene(mainFrame.getWidth(), mainFrame.getHeight(), status, mainFrame);
 				}
 			} else {
 				JOptionPane.showMessageDialog(mainFrame,
@@ -425,6 +422,108 @@ public class Application {
 		public void windowOpened(WindowEvent e) {
 			// TODO Auto-generated method stub
 			
+		}
+		
+	}
+	
+	private class OpeningThread implements Runnable {
+		Thread thread;
+		JFileChooser fc;
+		
+		public OpeningThread(JFileChooser fc) {
+			this.fc = fc;
+			thread = new Thread(this, "OpeningThread");
+			thread.start();
+		}
+		
+		@Override
+		public void run() {
+			hidePageFrames();
+			mainFrame.setResizable(false);
+            File file = fc.getSelectedFile();
+            try {
+				documents.add(PDDocument.load(file));
+				PDDocumentCatalog docCatalog = documents.get(documents.size() - 1).getDocumentCatalog();
+				@SuppressWarnings("unchecked")
+				List<PDPage> pages = docCatalog.getAllPages();
+				int i = pageFrames.size() + 1;
+				if (i <= 0) {
+					i = 1;
+				}
+				for (PDPage page : pages) {
+					addPage(new PageFrame(i++, (PDPage) page, Application.this));
+				}
+				
+				drawPageFrames();
+				lastPath = file.getParent();
+				
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			} 
+            status = Status.WORKING;
+            processScene.stopAnimation();
+            showPageFrames();
+            System.out.println("document was opened!");
+            mainFrame.setResizable(true);
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+	}
+	
+	private class SavingThread implements Runnable {
+		Thread thread;
+		JFileChooser fc;
+		
+		public SavingThread(JFileChooser fc) {
+			this.fc = fc;
+			thread = new Thread(this, "SavingThread");
+			thread.start();
+		}
+		
+		@Override
+		public void run() {
+			hidePageFrames();
+			mainFrame.setResizable(false);
+			File file = fc.getSelectedFile();
+			PDDocument document;
+			try {
+				document = new PDDocument();
+				for (PageFrame pf : pageFrames) {
+					
+					document.importPage(pf.getPage());
+				}
+				
+				String[] splitedPath = file.getPath().split("\\.");
+				if (splitedPath[splitedPath.length - 1].equals("pdf")) {
+					document.save(file.getPath());
+				} else {
+					document.save(file.getPath() + ".pdf");	
+				}
+				
+				lastPath = file.getParent();
+				
+				document.close();
+
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			} catch (COSVisitorException e) {
+				e.printStackTrace();
+			} 
+			System.out.println("document was saved!");
+			status = Status.WORKING;
+			processScene.stopAnimation();
+            showPageFrames();
+            mainFrame.setResizable(true);
+            repaint();
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 		
 	}

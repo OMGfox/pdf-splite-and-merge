@@ -12,6 +12,8 @@ public class Image extends DrawObject{
 	private int width;
 	private int height;
 	private BufferedImage image;
+	private double angle;
+
 	
 	public Image(int x, int y, BufferedImage image) {
 		this.x = x;
@@ -57,10 +59,26 @@ public class Image extends DrawObject{
 		}
 	}
 	
+	
+    public double getAngle() {
+
+        return Math.toRadians(angle);
+
+    }
+    
+    public void setAngle(double angle) {
+    	this.angle = angle;
+    }
+	
 	@Override
 	public void draw(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g;
+		if (angle > 0) {
+			
+			g2d.rotate(Math.toRadians(getAngle()), image.getWidth() / 2, image.getWidth() / 2);
+		}
 		g2d.drawImage(image, x, y, width, height, null);
+		g2d.dispose();
 	}
 
 }

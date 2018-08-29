@@ -26,4 +26,8 @@ public class Canvas extends JPanel{
 		dObjects.add(drawObject);
 	}
 	
+	public void clearDrawObjects() {
+		dObjects.clear();
+	}
+	
 }

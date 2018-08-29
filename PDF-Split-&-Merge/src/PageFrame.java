@@ -52,9 +52,9 @@ public class PageFrame extends JPanel{
 		width = 597;
 		height = 200;
 		image = getBufferedImage();
-		setBorder(BorderFactory.createRaisedBevelBorder());
+		setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, new Color(0, 0, 0)));
 		setLayout(null);
-		setBackground(new Color(0xf2f2f2));
+		setBackground(new Color(209,231,81));
 		addMouseListener(new PageFrameMouseListener());
 		addMouseListener(new DragPageFrameMouseListener());
 		addMouseMotionListener(new DragPageFrameMouseListener());
@@ -80,13 +80,6 @@ public class PageFrame extends JPanel{
 	}
 	
 	private void init() {
-		imagePreview = new Canvas();
-		imagePreview.setBackground(new Color(0xf2f2f2));
-		imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
-		imagePreview.setBounds(25, 10, 180, 180);
-		imagePreview.addMouseListener(new CanvasMouseListener());
-		imagePreview.addMouseListener(new PageFrameMouseListener());
-		
 //		Поле номер страницы
 		JLabel lablePageNumber = new JLabel("№ стр.: ");
 		lablePageNumber.setBounds(250, 25, 70, 20);
@@ -120,42 +113,53 @@ public class PageFrame extends JPanel{
 		rightRotationButton.addMouseListener(new PageFrameMouseListener());
 		
 //		Предпросмотр странички
-		previewButton = new BeautyButton("/search_24x24.png", "/search_rollover_24x24.png", "Посмотреть");
+		previewButton = new BeautyButton("/search_24x24.png", "/search_24x24.png", "Посмотреть");
 		previewButton.setBounds(180, 25, 24, 24);
 		previewButton.setVisible(false);
-		previewButton.addActionListener(new PreviewButtonListener());
 		previewButton.addMouseListener(new PageFrameMouseListener());
 		previewButton.addMouseListener(new CanvasMouseListener());
 		
 		saveButton = new BeautyButton("/save_button_24x24.png", "/save_button_rollover_24x24.png", "Сохранить страничку в файл");
-		saveButton.setBounds(this.width - 100, 5, 24, 24);
+		saveButton.setBounds(this.width - 72, 7, 24, 24);
 		saveButton.setVisible(false);
 		saveButton.addActionListener(new SaveButtonListener());
 		saveButton.addMouseListener(new PageFrameMouseListener());
 		
 		deleteButton = new BeautyButton("/button_delete_red_24x24.png", "/button_delete_red_rollover_24x24.png", "Удалить");
-		deleteButton.setBounds(this.width - 65, 5, 24, 24);
+		deleteButton.setBounds(this.width - 40, 7, 24, 24);
 		deleteButton.setVisible(false);
 		deleteButton.addActionListener(new DeleteButtonListener());
 		deleteButton.addMouseListener(new PageFrameMouseListener());
 		
 //		Добавление элементов на PageFrame
+		add(previewButton);
+		initImagePreview();
 		add(lablePageNumber);
 		add(fieldPageNumber);
 		add(leftRotationButton);
 		add(lableDegreeOfRotation);
 		add(fieldDegreeOfRotation);
 		add(rightRotationButton);
-		add(previewButton);
+		
 		add(saveButton);
 		add(deleteButton);
-		add(imagePreview);
+	}
+	
+	private void initImagePreview() {
+		imagePreview = new Canvas();
+		imagePreview.setBackground(new Color(77,188,233, 25));
+		imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
+		imagePreview.setBounds(25, 10, 180, 180);
+		imagePreview.addMouseListener(new CanvasMouseListener());
+		imagePreview.addMouseListener(new PageFrameMouseListener());
+		imagePreview.setBorder(BorderFactory.createMatteBorder(1, 1, 1, 1, new Color(38,173,228)));
+		PageFrame.this.add(imagePreview);
 	}
 	
 	public void resizeInterface() {
 		previewButton.setBounds(180, 25, 24, 24);
-		saveButton.setBounds(this.width - 100, 5, 24, 24);
-		deleteButton.setBounds(this.width - 65, 5, 24, 24);
+		saveButton.setBounds(this.width - 72, 7, 24, 24);
+		deleteButton.setBounds(this.width - 40, 7, 24, 24);
 	}
 	
 	public PDPage getPage() {
@@ -194,13 +198,7 @@ public class PageFrame extends JPanel{
 			fieldDegreeOfRotation.setText(Integer.toString(rotation));
 			image = getBufferedImage();
 			PageFrame.this.remove(imagePreview);
-			imagePreview = new Canvas();
-			imagePreview.setBackground(new Color(0xf2f2f2));
-			imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
-			imagePreview.setBounds(25, 10, 180, 180);
-			imagePreview.addMouseListener(new CanvasMouseListener());
-			imagePreview.addMouseListener(new PageFrameMouseListener());
-			PageFrame.this.add(imagePreview);
+			initImagePreview();
 			app.repaint();
 		}
 		
@@ -217,26 +215,8 @@ public class PageFrame extends JPanel{
 			fieldDegreeOfRotation.setText(Integer.toString(rotation));
 			image = getBufferedImage();
 			PageFrame.this.remove(imagePreview);
-			imagePreview = new Canvas();
-			imagePreview.setBackground(new Color(0xf2f2f2));
-			imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
-			imagePreview.setBounds(25, 10, 180, 180);
-			imagePreview.addMouseListener(new CanvasMouseListener());
-			imagePreview.addMouseListener(new PageFrameMouseListener());
-			PageFrame.this.add(imagePreview);
+			initImagePreview();
 			app.repaint();
-		}
-		
-	}
-	
-	private class PreviewButtonListener implements ActionListener{
-
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			previewButton.setSelected(false);
-			
-			@SuppressWarnings("unused")
-			PDFViewer viewer = new PDFViewer(getPage());
 		}
 		
 	}
@@ -303,20 +283,20 @@ public class PageFrame extends JPanel{
 
 		@Override
 		public void mouseEntered(MouseEvent arg0) {
-			setBorder(BorderFactory.createRaisedBevelBorder());
+			setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, new Color(0, 0, 0)));
 			
 		}
 
 		@Override
 		public void mouseExited(MouseEvent arg0) {
 
-			setBorder(BorderFactory.createRaisedBevelBorder());
+			setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, new Color(0, 0, 0)));
 			
 		}
 
 		@Override
 		public void mousePressed(MouseEvent e) {
-			PageFrame.this.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, Color.ORANGE));
+			PageFrame.this.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, new Color(38,173,228)));
 			isSelected = true;
 			initialX = e.getX();
 			initialY = e.getY();
@@ -326,13 +306,13 @@ public class PageFrame extends JPanel{
 
 		@Override
 		public void mouseReleased(MouseEvent arg0) {
-			setBorder(BorderFactory.createRaisedBevelBorder());
+			setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, new Color(0, 0, 0)));
 			isSelected = false;	
 		}
 
 		@Override
 		public void mouseDragged(MouseEvent e) {
-			PageFrame.this.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, Color.ORANGE));
+			PageFrame.this.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, new Color(38,173,228)));
 			PageFrame.this.getParent().setComponentZOrder(PageFrame.this, 0);
 			int dx = e.getX() - initialX;
 			int dy = e.getY() - initialY;
@@ -442,9 +422,6 @@ public class PageFrame extends JPanel{
 							app.getViewport().getViewPosition().getY() + app.getViewport().getHeight() < app.getContentPanelPreferSize().getHeight()) {
 						offset = +1;
 						app.moveViewportSPane(offset);
-//						if (app.getViewport().getViewPosition().getY() <= app.getViewport().getViewPosition().getY() + app.getViewport().getHeight()) {
-//							PageFrame.this.setLocation(PageFrame.this.getX(), PageFrame.this.getY() + offset);
-//						}
 						PageFrame.this.setLocation(PageFrame.this.getX(), PageFrame.this.getY() + offset);
 					}
 					
@@ -452,6 +429,12 @@ public class PageFrame extends JPanel{
 					
 				}
 				deltaTime = System.currentTimeMillis() - startTime;
+			}
+		
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 			
 		}
@@ -470,6 +453,12 @@ public class PageFrame extends JPanel{
 		public void run() {
 			while (PageFrame.this.isSelected) {
 				check();
+			}
+			
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
 		}
 		
