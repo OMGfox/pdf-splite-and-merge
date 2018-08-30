@@ -78,7 +78,7 @@ public class Application {
 		
 		mainFrame = new JFrame();
 		mainFrame.setSize(new Dimension(this.width, this.height));
-		mainFrame.setTitle("PDF++ (v0.1-alpha)");
+		mainFrame.setTitle("PDF++ (v0.2-alpha)");
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainFrame.setLayout(null);	
 		mainFrame.setLocationRelativeTo(null); // to center a main window 
@@ -190,8 +190,29 @@ public class Application {
 			int x = (mainFrame.getWidth() - pf.getWidth() - 15) / 2;
 			int y = (pf.getPositionNumber() - 1) * 206 + 5;
 			pf.setBounds(x, y, pf.getWidth(), pf.getHeight());
-			pf.resizeInterface();
 			contentFrame.add(pf);
+		}
+		repaint();
+	}
+	
+	public void setStatus(Status status) {
+		this.status = status;
+	}
+	
+	public Status getStatus() {
+		return status;
+	}
+	
+	public void repaintPageFrames() {
+		for(PageFrame pf : pageFrames) {
+			if (mainFrame.getWidth() > 1024) {
+				pf.setWidth(1024);
+			} else {
+				pf.setWidth(mainFrame.getWidth() - 30);
+			}
+			int x = (mainFrame.getWidth() - pf.getWidth() - 15) / 2;
+			int y = (pf.getPositionNumber() - 1) * 206 + 5;
+			pf.setBounds(x, y, pf.getWidth(), pf.getHeight());
 		}
 		repaint();
 	}
@@ -246,9 +267,18 @@ public class Application {
 		for (PageFrame pf : pageFrames) {
 			pf.setPositionNumber(i++);
 		}
-		contentFrame.removeAll();
-		drawPageFrames();
-		repaint();
+		repaintPageFrames();
+
+	}
+	
+	public void swapPagesWithNoRepaint(int first, int second) {
+		PageFrame temp = pageFrames.get(first - 1);
+		pageFrames.set(first - 1, pageFrames.get(second - 1));
+		pageFrames.set(second - 1, temp);
+		int i = 1;
+		for (PageFrame pf : pageFrames) {
+			pf.setPositionNumber(i++);
+		}
 	}
 	
 	public void resizeInterface() {

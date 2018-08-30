@@ -197,9 +197,9 @@ public class PageFrame extends JPanel{
 			page.setRotation(rotation);
 			fieldDegreeOfRotation.setText(Integer.toString(rotation));
 			image = getBufferedImage();
-			PageFrame.this.remove(imagePreview);
-			initImagePreview();
-			app.repaint();
+			imagePreview.clearDrawObjects();
+			imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
+			imagePreview.repaint();
 		}
 		
 	}
@@ -214,9 +214,9 @@ public class PageFrame extends JPanel{
 			page.setRotation(rotation);
 			fieldDegreeOfRotation.setText(Integer.toString(rotation));
 			image = getBufferedImage();
-			PageFrame.this.remove(imagePreview);
-			initImagePreview();
-			app.repaint();
+			imagePreview.clearDrawObjects();
+			imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
+			imagePreview.repaint();
 		}
 		
 	}
@@ -313,7 +313,9 @@ public class PageFrame extends JPanel{
 		@Override
 		public void mouseDragged(MouseEvent e) {
 			PageFrame.this.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, new Color(38,173,228)));
-			PageFrame.this.getParent().setComponentZOrder(PageFrame.this, 0);
+			if (PageFrame.this.getParent() != null) {
+				PageFrame.this.getParent().setComponentZOrder(PageFrame.this, 0);
+			}
 			int dx = e.getX() - initialX;
 			int dy = e.getY() - initialY;
 			int x = PageFrame.this.getX() + dx;
@@ -324,9 +326,8 @@ public class PageFrame extends JPanel{
 		@Override
 		public void mouseMoved(MouseEvent e) {
 			// TODO Auto-generated method stub
-			
+	
 		}
-		
 	}
 	
 	private class PageFrameMouseListener implements MouseListener {
@@ -414,15 +415,18 @@ public class PageFrame extends JPanel{
 			while (isSelected) {
 				if (deltaTime / 1000F >= 0.001) {
 					if(PageFrame.this.getY() <= app.getViewport().getViewPosition().getY() - 10 && app.getViewport().getViewPosition().getY() > 0) {
-						offset = -1;
+						app.setStatus(Status.AUTOSCROLLING);
+						offset = -10;
 						app.moveViewportSPane(offset);
 						PageFrame.this.setLocation(PageFrame.this.getX(), PageFrame.this.getY() + offset);
-					}
-					if(PageFrame.this.getY() + PageFrame.this.height >= app.getViewport().getViewPosition().getY() + app.getViewport().getHeight() + 10 &&
+					} else if(PageFrame.this.getY() + PageFrame.this.height >= app.getViewport().getViewPosition().getY() + app.getViewport().getHeight() + 10 &&
 							app.getViewport().getViewPosition().getY() + app.getViewport().getHeight() < app.getContentPanelPreferSize().getHeight()) {
-						offset = +1;
+						app.setStatus(Status.AUTOSCROLLING);
+						offset = +10;
 						app.moveViewportSPane(offset);
 						PageFrame.this.setLocation(PageFrame.this.getX(), PageFrame.this.getY() + offset);
+					} else {
+						app.setStatus(Status.WORKING);
 					}
 					
 					startTime = System.currentTimeMillis();
@@ -430,6 +434,8 @@ public class PageFrame extends JPanel{
 				}
 				deltaTime = System.currentTimeMillis() - startTime;
 			}
+			
+			app.setStatus(Status.WORKING);
 		
 			try {
 				thread.join();
@@ -469,8 +475,12 @@ public class PageFrame extends JPanel{
 					continue;
 				}
 				if ((pf.getY() < y + pf.height / 2 && pf.getY() + pf.height / 2 > y + pf.height / 2 ||
-						pf.getY() + pf.height / 2 < y + pf.height / 2 && pf.getY() + pf.height > y + pf.height /2)) {
-					app.swapPages(PageFrame.this.getPositionNumber(), pf.getPositionNumber());
+					pf.getY() + pf.height / 2 < y + pf.height / 2 && pf.getY() + pf.height > y + pf.height /2)) {
+					if (app.getStatus().equals(Status.AUTOSCROLLING)) {
+						app.swapPagesWithNoRepaint(PageFrame.this.getPositionNumber(), pf.getPositionNumber());
+					} else {
+						app.swapPages(PageFrame.this.getPositionNumber(), pf.getPositionNumber());
+					}
 				}
 			}
 		}
