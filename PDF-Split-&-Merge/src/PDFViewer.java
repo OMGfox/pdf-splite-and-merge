@@ -22,16 +22,18 @@ public class PDFViewer {
 	private BufferedImage image;
 	private JButton buttonBiger;
 	private JButton buttonSmaller;
+	private String VERSION;
 	
-	public PDFViewer(PDPage page) {
+	public PDFViewer(PDPage page, String VERSION) {
 		this.page = page;
+		this.VERSION = VERSION;
 		init();
 	}
 
 	private void init() {
 		viewFrame = new JFrame();
 		viewFrame.setLayout(null);
-		viewFrame.setTitle("PDF++ Previewer v0.1-alpha");
+		viewFrame.setTitle("PDF++ Previewer " + VERSION);
 		Toolkit tk = Toolkit.getDefaultToolkit();
 		Dimension deffaultDimension = tk.getScreenSize();
 		viewFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);

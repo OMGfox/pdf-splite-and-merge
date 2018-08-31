@@ -32,7 +32,11 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
 
+import Polygon.FileDrop;
+
 public class Application {
+	
+	private String VERSION;
 	
 	private JFrame mainFrame;
 	private JPanel contentFrame;
@@ -54,6 +58,7 @@ public class Application {
 	private BeautyButton saveButton;
 
 	public Application() {
+		VERSION = "v0.2.1-alpha";
 		
 		this.width = 640;
 		this.height = 520;
@@ -78,7 +83,7 @@ public class Application {
 		
 		mainFrame = new JFrame();
 		mainFrame.setSize(new Dimension(this.width, this.height));
-		mainFrame.setTitle("PDF++ (v0.2-alpha)");
+		mainFrame.setTitle("PDF++ " + VERSION);
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		mainFrame.setLayout(null);	
 		mainFrame.setLocationRelativeTo(null); // to center a main window 
@@ -86,6 +91,7 @@ public class Application {
 		mainFrame.addComponentListener(new WindowStateChangeListener());
 		mainFrame.addWindowListener(new WindowEventListener());
 		mainFrame.setMinimumSize(new Dimension(655, 520));
+		
 		
 		if (!icons.isEmpty()) {
 			mainFrame.setIconImages(icons);
@@ -99,6 +105,10 @@ public class Application {
 	private void init() {
 		drawTopPanel();
 		drawContentFrame();
+	}
+	
+	public String getVersion() {
+		return VERSION;
 	}
 	
 	public Dimension getContentPanelPreferSize() {
@@ -173,11 +183,41 @@ public class Application {
 		contentFrame = new JPanel();
 		contentFrame.setBackground(Color.WHITE);
 		contentFrame.setLayout(null);
+		new  FileDrop( contentFrame, new FileDrop.Listener()
+		  {   public void  filesDropped( java.io.File[] files )
+		      {   
+		         // handle file drop
+		        boolean isPDF = true;
+		        for (File file : files) {
+		        	if (!checkFileType(file)){
+		        		isPDF = false;
+		        	}
+		        }
+		        
+		        if (isPDF){
+		        	processScene.stopWelcom();
+					status = Status.OPENING;
+					new DragOpeningThread(files);
+					processScene = new ProcessScene(mainFrame.getWidth(), mainFrame.getHeight(), status, mainFrame);
+		        }
+
+		      }   // end filesDropped
+		  }); // end FileDrop.Listener
 		
 		sPane = new JScrollPane(contentFrame, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
 				JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		sPane.setBounds(0, 38, width, 445);
 		sPane.getVerticalScrollBar().setUnitIncrement(16);
+	}
+	
+	private boolean checkFileType(File file){
+		boolean isPDF = false;
+		String[] splitedList = file.getAbsolutePath().split("\\.");
+		String fileType = splitedList[splitedList.length - 1].toLowerCase(); 
+		if (fileType.equals("pdf")) {
+				isPDF = true;
+		}
+		return isPDF;
 	}
 	
 	public void drawPageFrames() {
@@ -201,6 +241,14 @@ public class Application {
 	
 	public Status getStatus() {
 		return status;
+	}
+	
+	public ProcessScene getProcessScene() {
+		return processScene;
+	}
+	
+	public JFrame getMainFrame() {
+		return mainFrame;
 	}
 	
 	public void repaintPageFrames() {
@@ -239,10 +287,12 @@ public class Application {
 
 	}
 	
-	public void start() {	
+	public void start() {
+		
 		mainFrame.add(topPanel);
 		mainFrame.add(sPane);
 		mainFrame.setVisible(true);	
+		processScene = new ProcessScene(contentFrame.getWidth(), contentFrame.getHeight(), status, contentFrame);
 	}
 	
 	public void repaint() {
@@ -306,20 +356,22 @@ public class Application {
 		
 		
 		if (pageFrames.size() > 0) {
-			contentFrame.removeAll();
-			drawPageFrames();	
+			for (PageFrame pf : pageFrames) {
+				pf.resizeInterface();
+			}
+			repaintPageFrames();
 		}
 		
 		repaint();
 	}
 
-	private void hidePageFrames(){
+	public void hidePageFrames(){
 		for (PageFrame pf : pageFrames) {
 			pf.setVisible(false);
 		}
 	}
 	
-	private void showPageFrames() {
+    void showPageFrames() {
 		for (PageFrame pf : pageFrames) {
 			pf.setVisible(true);
 		}
@@ -333,7 +385,7 @@ public class Application {
 			documents.clear();
 			deleteAllButton.setSelected(false);
 			contentFrame.removeAll();
-			resizeInterface();
+			repaint();
 			status = Status.EMPTY;
 		}
 	}
@@ -353,6 +405,7 @@ public class Application {
 			fc.setFileFilter(filter);
 			int returnVal = fc.showOpenDialog(openButton);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
+				processScene.stopWelcom();
 				status = Status.OPENING;
 				new OpeningThread(fc);
 				processScene = new ProcessScene(mainFrame.getWidth(), mainFrame.getHeight(), status, mainFrame);
@@ -493,6 +546,58 @@ public class Application {
             status = Status.WORKING;
             processScene.stopAnimation();
             showPageFrames();
+            resizeInterface();
+            System.out.println("document was opened!");
+            mainFrame.setResizable(true);
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+	}
+	
+	private class DragOpeningThread implements Runnable {
+		private Thread thread;
+		private File[] files;
+		
+		
+		public DragOpeningThread(File[] files) {
+			this.files = files;
+			thread = new Thread(this, "DragOpeningThread");
+			thread.start();
+		}
+		
+		@Override
+		public void run() {
+			hidePageFrames();
+			mainFrame.setResizable(false);
+            for (File file : files) {       	
+            	try {
+					documents.add(PDDocument.load(file));
+					PDDocumentCatalog docCatalog = documents.get(documents.size() - 1).getDocumentCatalog();
+					@SuppressWarnings("unchecked")
+					List<PDPage> pages = docCatalog.getAllPages();
+					int i = pageFrames.size() + 1;
+					if (i <= 0) {
+						i = 1;
+					}
+					for (PDPage page : pages) {
+						addPage(new PageFrame(i++, (PDPage) page, Application.this));
+					}
+					
+					drawPageFrames();
+					lastPath = file.getParent();
+					
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+            status = Status.WORKING;
+            processScene.stopAnimation();
+            showPageFrames();
+            resizeInterface();
             System.out.println("document was opened!");
             mainFrame.setResizable(true);
 			try {

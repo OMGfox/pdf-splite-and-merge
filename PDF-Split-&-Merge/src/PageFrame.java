@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.datatransfer.DataFlavor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -10,6 +11,7 @@ import java.io.IOException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -41,6 +43,7 @@ public class PageFrame extends JPanel{
 	private int initialY;
 	private long startTime;
 	private long deltaTime;
+	private ProcessScene processScene;
 
 	public PageFrame(int positionNumber, PDPage page, Application app) {
 
@@ -236,27 +239,10 @@ public class PageFrame extends JPanel{
 			
 			int returnVal = fc.showSaveDialog(saveButton);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
-				File file = fc.getSelectedFile();
-				PDDocument document;
-				try {
-					document = new PDDocument();
-					document.addPage(getPage());
-					
-					String[] splitedPath = file.getPath().split("\\.");
-					if (splitedPath[splitedPath.length - 1].equals("pdf")) {
-						document.save(file.getPath());
-					} else {
-						document.save(file.getPath() + ".pdf");	
-					}
-				
-					lastPath = file.getParent();
-					document.close();
-
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				} catch (COSVisitorException ex1) {
-					ex1.printStackTrace();
-				} 
+				app.setStatus(Status.SAVING);
+				new SavingThread(fc);
+				JFrame mainFrame = app.getMainFrame();
+				processScene = new ProcessScene(mainFrame.getWidth(), mainFrame.getHeight(), app.getStatus(), mainFrame);
 			}
 		}
 		
@@ -354,7 +340,10 @@ public class PageFrame extends JPanel{
 
 		@Override
 		public void mousePressed(MouseEvent arg0) {
-			
+			DataFlavor df = new DataFlavor();
+			if (df.isFlavorJavaFileListType()) {
+				df.getHumanPresentableName();
+			}
 		}
 
 		@Override
@@ -393,7 +382,7 @@ public class PageFrame extends JPanel{
 		@Override
 		public void mouseReleased(MouseEvent e) {
 			@SuppressWarnings("unused")
-			PDFViewer viewer = new PDFViewer(getPage());
+			PDFViewer viewer = new PDFViewer(getPage(), app.getVersion());
 			
 		}
 		
@@ -413,7 +402,7 @@ public class PageFrame extends JPanel{
 			startTime = System.currentTimeMillis();
 			deltaTime = System.currentTimeMillis() - startTime;
 			while (isSelected) {
-				if (deltaTime / 1000F >= 0.001) {
+				if (deltaTime / 1000F >= 0.01) {
 					if(PageFrame.this.getY() <= app.getViewport().getViewPosition().getY() - 10 && app.getViewport().getViewPosition().getY() > 0) {
 						app.setStatus(Status.AUTOSCROLLING);
 						offset = -10;
@@ -486,4 +475,59 @@ public class PageFrame extends JPanel{
 		}
 		
 	}
+	
+	private class SavingThread implements Runnable {
+		Thread thread;
+		JFileChooser fc;
+		
+		public SavingThread(JFileChooser fc) {
+			this.fc = fc;
+			thread = new Thread(this, "SavingThread");
+			thread.start();
+		}
+		
+		@Override
+		public void run() {
+			app.hidePageFrames();
+			app.getMainFrame().setResizable(false);
+			
+			File file = fc.getSelectedFile();
+			PDDocument document;
+			try {
+				document = new PDDocument();
+				document.addPage(PageFrame.this.getPage());
+				
+				String[] splitedPath = file.getPath().split("\\.");
+				if (splitedPath[splitedPath.length - 1].equals("pdf")) {
+					document.save(file.getPath());
+				} else {
+					document.save(file.getPath() + ".pdf");	
+				}
+			
+				lastPath = file.getParent();
+				document.close();
+
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			} catch (COSVisitorException ex1) {
+				ex1.printStackTrace();
+			} 
+			
+			System.out.println("document was saved!");
+			app.setStatus(Status.WORKING);;
+			processScene.stopAnimation();
+	        app.showPageFrames();
+	        app.getMainFrame().setResizable(true);
+	        repaint();
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+	}
+	
 }
+
+
