@@ -21,15 +21,7 @@ public class ProcessScene extends JPanel{
 		setBackground(Color.WHITE);
 		setLayout(null);
 		canvas = null;
-		if (status.equals(Status.EMPTY)) {
-			canvas = new Canvas();
-			canvas.setBounds((width - 276) / 2, (height - 256) / 2, 276, 256);
-			image = new drawing.Image(0, 0, "/welcom.png");
-			canvas.addDrawObject(image);
-			add(canvas);
-			root.add(this);
-			new PlayWelcom();
-		} else if (status.equals(Status.OPENING) || status.equals(Status.SAVING)) {
+		if (status.equals(Status.OPENING) || status.equals(Status.SAVING)) {
 			canvas = new Canvas();
 			canvas.setBounds((width - 128) / 2, (height - 128) / 2, 128, 128);
 			image = new drawing.Image(0, 0, "/spiner.png");
@@ -82,7 +74,9 @@ public class ProcessScene extends JPanel{
 	private void repaintCanvas() {
 		image.setAngle(angle);
 		canvas.clearDrawObjects();
-		this.setBounds(0, 0, getParent().getWidth(), getParent().getHeight());
+		if (!this.equals(null)) {
+			this.setBounds(0, 0, getParent().getWidth(), getParent().getHeight());
+		}
 		if (isWelcom) {
 			canvas.setBounds((getWidth() - 276) / 2, (getHeight() - 256) / 2, 276, 256);
 		}
@@ -114,6 +108,12 @@ public class ProcessScene extends JPanel{
 		
 		@Override
 		public void run() {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			while (isWelcom) {
 				try {
 					repaintCanvas();

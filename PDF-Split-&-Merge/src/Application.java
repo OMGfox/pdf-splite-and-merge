@@ -1,17 +1,21 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Image;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.event.WindowStateListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -20,6 +24,9 @@ import javax.swing.BorderFactory;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -52,13 +59,17 @@ public class Application {
 	private int height;
 	private Status status;
 	private ProcessScene processScene;
+	private JMenuBar menuBar;
+	private boolean isCtrlPressed;
 	
 	private BeautyButton openButton;
 	private BeautyButton deleteAllButton;
 	private BeautyButton saveButton;
 
 	public Application() {
-		VERSION = "v0.2.1-alpha";
+		VERSION = "v0.4.0-alpha";
+		
+		new CheckKeyPressing();
 		
 		this.width = 640;
 		this.height = 520;
@@ -92,7 +103,6 @@ public class Application {
 		mainFrame.addWindowListener(new WindowEventListener());
 		mainFrame.setMinimumSize(new Dimension(655, 520));
 		
-		
 		if (!icons.isEmpty()) {
 			mainFrame.setIconImages(icons);
 		}
@@ -102,9 +112,75 @@ public class Application {
 		init();
 	}
 	
-	private void init() {
+	private void init() 
+	{
 		drawTopPanel();
 		drawContentFrame();
+		drawMenu();
+		drawMenu();
+	}
+	
+	private void drawMenu() {
+		menuBar = new JMenuBar();
+		mainFrame.setJMenuBar(menuBar);
+		
+		JMenu menuFile = new JMenu("Файл");
+		menuBar.add(menuFile);
+		JMenuItem menuItemOpen = new JMenuItem("Открыть");
+		menuItemOpen.addActionListener(new OpenListener());
+		menuFile.add(menuItemOpen);
+		
+		JMenuItem menuItemSaveAs = new JMenuItem("Сохранить как...");
+		menuItemSaveAs.addActionListener(new SaveListener());
+		menuFile.add(menuItemSaveAs);
+		
+		JMenuItem menuItemSaveSelectedAs = new JMenuItem("Сохранить выделенные как...");
+		menuItemSaveSelectedAs.addActionListener(new SaveSelectedListener());
+		menuFile.add(menuItemSaveSelectedAs);
+		
+		menuFile.addSeparator();
+		
+		JMenuItem menuItemExit = new JMenuItem("Выход");
+		menuItemExit.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});
+		menuFile.add(menuItemExit);
+		
+		JMenu menuAdditional = new JMenu("Дополнительно");
+		menuBar.add(menuAdditional);
+		
+		JMenuItem menuDeleteAll = new JMenuItem("Очистить список");
+		menuDeleteAll.addActionListener(new DeleteAllListener());
+		menuAdditional.add(menuDeleteAll);
+		
+		JMenuItem menuSaveAllToSingleFile = new JMenuItem("Сохранить каждую страницу в отдельный файл");
+		menuSaveAllToSingleFile.addActionListener(new SaveAllToSingleFileListener());
+		menuAdditional.add(menuSaveAllToSingleFile);
+		
+		// Sorting
+		menuAdditional.addSeparator();
+		
+		JMenuItem menuSortByPageNumber = new JMenuItem("Сортировать по номеру");
+		menuSortByPageNumber.addActionListener(new SortByOrder(Sorting.PAGE_NUMBER));
+		menuAdditional.add(menuSortByPageNumber);
+		
+		JMenuItem menuSortByPageNuberInverse = new JMenuItem("Сортировать по номеру в обратном порядке");
+		menuSortByPageNuberInverse.addActionListener(new SortByOrder(Sorting.PAGE_NUMBER_INVERSE));
+		menuAdditional.add(menuSortByPageNuberInverse);
+		
+		JMenu menuHelp = new JMenu("Помощь");
+		menuBar.add(menuHelp);
+		
+		JMenuItem menuItemAbout = new JMenuItem("О PDF++");
+		menuHelp.add(menuItemAbout);
+	}
+
+	public JMenuBar getMenuBar() {
+		return menuBar;
 	}
 	
 	public String getVersion() {
@@ -288,11 +364,11 @@ public class Application {
 	}
 	
 	public void start() {
-		
 		mainFrame.add(topPanel);
 		mainFrame.add(sPane);
-		mainFrame.setVisible(true);	
+		mainFrame.setVisible(true);
 		processScene = new ProcessScene(contentFrame.getWidth(), contentFrame.getHeight(), status, contentFrame);
+		
 	}
 	
 	public void repaint() {
@@ -332,37 +408,28 @@ public class Application {
 	}
 	
 	public void resizeInterface() {
-		topPanel.setSize(new Dimension(mainFrame.getWidth() - 15, 38));
 		if (deleteAllButton != null) {
+			topPanel.setSize(new Dimension(mainFrame.getWidth() - 15, 38));
 			deleteAllButton.setBounds(topPanel.getWidth() - 35, 3, 30, 30);
-		}
-		if (sPane != null) {
-			sPane.setBounds(0, 38, mainFrame.getWidth() - 15, mainFrame.getHeight() - 75);
-		}
-		if (contentFrame != null) {
+			sPane.setBounds(0, 38, mainFrame.getWidth() - 15, mainFrame.getHeight() - 98);
+
 			if (contentFrame.getPreferredSize().getHeight() > contentFrame.getSize().getHeight()) {
 				sPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 			} else {
 				sPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 			}
-		}
-		if (numPages != null) {
 			numPages.setBounds(mainFrame.getWidth() - 135, 10, 40, 20);
-		}
-		
-		if (numPagesLable != null) {
 			numPagesLable.setBounds(mainFrame.getWidth() - 195, 10, 80, 20);
-		}
-		
-		
-		if (pageFrames.size() > 0) {
-			for (PageFrame pf : pageFrames) {
-				pf.resizeInterface();
+			
+			if (pageFrames.size() > 0) {
+				for (PageFrame pf : pageFrames) {
+					pf.resizeInterface();
+				}
+				repaintPageFrames();
 			}
-			repaintPageFrames();
+			repaint();	
 		}
-		
-		repaint();
+
 	}
 
 	public void hidePageFrames(){
@@ -377,6 +444,14 @@ public class Application {
 		}
 	}
 	
+	public boolean isCtrlPressed() {
+		return isCtrlPressed;
+	}
+
+	public void setCtrlPressed(boolean isCtrlPressed) {
+		this.isCtrlPressed = isCtrlPressed;
+	}
+
 	private class DeleteAllListener implements ActionListener{
 
 		@Override
@@ -415,6 +490,59 @@ public class Application {
 			openButton.setSelected(false);	
 			
 		}	
+		
+		private class OpeningThread implements Runnable {
+			Thread thread;
+			JFileChooser fc;
+			
+			public OpeningThread(JFileChooser fc) {
+				this.fc = fc;
+				thread = new Thread(this, "OpeningThread");
+				thread.start();
+			}
+			
+			@Override
+			public void run() {
+				hidePageFrames();
+				mainFrame.setResizable(false);
+				menuBar.setVisible(false);
+	            File file = fc.getSelectedFile();
+	            try {
+					documents.add(PDDocument.load(file));
+					PDDocumentCatalog docCatalog = documents.get(documents.size() - 1).getDocumentCatalog();
+					@SuppressWarnings("unchecked")
+					List<PDPage> pages = docCatalog.getAllPages();
+					int i = pageFrames.size() + 1;
+					if (i <= 0) {
+						i = 1;
+					}
+					for (PDPage page : pages) {
+						addPage(new PageFrame(i++, (PDPage) page, Application.this));
+					}
+					
+					drawPageFrames();
+					lastPath = file.getParent();
+					
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				} 
+	            
+	            status = Status.WORKING;
+	            processScene.stopAnimation();
+	            showPageFrames();
+	            resizeInterface();
+	            System.out.println("document was opened!");
+	            mainFrame.setResizable(true);
+	            menuBar.setVisible(true);
+				try {
+					thread.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			
+		}
+		
 	}
 	
 	private class SaveListener implements ActionListener{
@@ -445,6 +573,236 @@ public class Application {
 					    JOptionPane.WARNING_MESSAGE);
 			}
 
+		}
+		
+		private class SavingThread implements Runnable {
+			Thread thread;
+			JFileChooser fc;
+			
+			public SavingThread(JFileChooser fc) {
+				this.fc = fc;
+				thread = new Thread(this, "SavingThread");
+				thread.start();
+			}
+			
+			@Override
+			public void run() {
+				hidePageFrames();
+				mainFrame.setResizable(false);
+				menuBar.setVisible(false);
+				File file = fc.getSelectedFile();
+				PDDocument document;
+				try {
+					document = new PDDocument();
+					for (PageFrame pf : pageFrames) {
+						
+						document.importPage(pf.getPage());
+					}
+					
+					String[] splitedPath = file.getPath().split("\\.");
+					if (splitedPath[splitedPath.length - 1].equals("pdf")) {
+						document.save(file.getPath());
+					} else {
+						document.save(file.getPath() + ".pdf");	
+					}
+					
+					lastPath = file.getParent();
+					
+					document.close();
+
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				} catch (COSVisitorException e) {
+					e.printStackTrace();
+				} 
+				System.out.println("document was saved!");
+				status = Status.WORKING;
+				processScene.stopAnimation();
+	            showPageFrames();
+	            mainFrame.setResizable(true);
+	            menuBar.setVisible(true);
+	            repaint();
+				try {
+					thread.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			
+		}
+		
+	}
+	
+	private class SaveSelectedListener implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			saveButton.setSelected(false);
+			if (pageFrames.size() > 0) {
+				JFileChooser fc;
+				if (lastPath == null) {
+					fc = new JFileChooser();
+				} else {
+					fc = new JFileChooser(lastPath);
+				}
+				
+				FileNameExtensionFilter filter = new FileNameExtensionFilter("Файлы с расширением .PDF", "pdf");
+				fc.setFileFilter(filter);
+				int returnVal = fc.showSaveDialog(saveButton);
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
+					status = Status.SAVING;
+					new SavingSelectedThread(fc);
+					processScene = new ProcessScene(mainFrame.getWidth(), mainFrame.getHeight(), status, mainFrame);
+				}
+			} else {
+				JOptionPane.showMessageDialog(mainFrame,
+					    "Документ должен содержать минимум одну страницу.",
+					    "Сохранение файла",
+					    JOptionPane.WARNING_MESSAGE);
+			}
+
+		}
+		
+		private class SavingSelectedThread implements Runnable {
+			Thread thread;
+			JFileChooser fc;
+			
+			public SavingSelectedThread(JFileChooser fc) {
+				this.fc = fc;
+				thread = new Thread(this, "SavingThread");
+				thread.start();
+			}
+			
+			@Override
+			public void run() {
+				hidePageFrames();
+				mainFrame.setResizable(false);
+				File file = fc.getSelectedFile();
+				PDDocument document;
+				try {
+					document = new PDDocument();
+					for (PageFrame pf : pageFrames) {
+						if (pf.isMultySelect()) {
+							document.importPage(pf.getPage());
+						}
+					}
+					
+					String[] splitedPath = file.getPath().split("\\.");
+					if (splitedPath[splitedPath.length - 1].equals("pdf")) {
+						document.save(file.getPath());
+					} else {
+						document.save(file.getPath() + ".pdf");	
+					}
+					
+					lastPath = file.getParent();
+					
+					document.close();
+
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				} catch (COSVisitorException e) {
+					e.printStackTrace();
+				} 
+				System.out.println("document was saved!");
+				status = Status.WORKING;
+				processScene.stopAnimation();
+	            showPageFrames();
+	            mainFrame.setResizable(true);
+	            repaint();
+				try {
+					thread.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			
+		}
+		
+	}
+	
+	private class SaveAllToSingleFileListener implements ActionListener{
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			saveButton.setSelected(false);
+			if (pageFrames.size() > 0) {
+				JFileChooser fc;
+				if (lastPath == null) {
+					fc = new JFileChooser();
+				} else {
+					fc = new JFileChooser(lastPath);
+				}
+				
+				FileNameExtensionFilter filter = new FileNameExtensionFilter("Файлы с расширением .PDF", "pdf");
+				fc.setFileFilter(filter);
+				int returnVal = fc.showSaveDialog(saveButton);
+				if (returnVal == JFileChooser.APPROVE_OPTION) {
+					status = Status.SAVING;
+					new SaveAllToSingleFileThread(fc);
+					processScene = new ProcessScene(mainFrame.getWidth(), mainFrame.getHeight(), status, mainFrame);
+				}
+			} else {
+				JOptionPane.showMessageDialog(mainFrame,
+					    "Документ должен содержать минимум одну страницу.",
+					    "Сохранение файла",
+					    JOptionPane.WARNING_MESSAGE);
+			}
+
+		}
+		
+		private class SaveAllToSingleFileThread implements Runnable {
+			Thread thread;
+			JFileChooser fc;
+			
+			public SaveAllToSingleFileThread(JFileChooser fc) {
+				this.fc = fc;
+				thread = new Thread(this, "SavingThread");
+				thread.start();
+			}
+			
+			@Override
+			public void run() {
+				hidePageFrames();
+				mainFrame.setResizable(false);
+				File file = fc.getSelectedFile();
+				PDDocument document;
+				try {
+					int i = 1;
+					for (PageFrame pf : pageFrames) {
+						document = new PDDocument();
+						document.importPage(pf.getPage());
+						
+						String[] splitedPath = file.getPath().split("\\.");
+						if (splitedPath[splitedPath.length - 1].equals("pdf")) {
+							document.save(file.getPath().replaceAll(".pdf", "") + " page(" + i + ")" + ".pdf" );
+						} else {
+							document.save(file.getPath() + " page(" + i + ")" + ".pdf");	
+						}
+
+						document.close();
+						i++;
+					}
+					
+					lastPath = file.getParent();
+
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				} catch (COSVisitorException e) {
+					e.printStackTrace();
+				} 
+				System.out.println("document was saved!");
+				status = Status.WORKING;
+				processScene.stopAnimation();
+	            showPageFrames();
+	            mainFrame.setResizable(true);
+	            repaint();
+				try {
+					thread.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			
 		}
 		
 	}
@@ -508,55 +866,68 @@ public class Application {
 		}
 		
 	}
+
 	
-	private class OpeningThread implements Runnable {
-		Thread thread;
-		JFileChooser fc;
+	private class SortByOrder implements ActionListener{
+
+		private Sorting sortBy;
 		
-		public OpeningThread(JFileChooser fc) {
-			this.fc = fc;
-			thread = new Thread(this, "OpeningThread");
-			thread.start();
+		public SortByOrder(Sorting sortBy) {
+			this.sortBy = sortBy;
 		}
 		
 		@Override
-		public void run() {
-			hidePageFrames();
-			mainFrame.setResizable(false);
-            File file = fc.getSelectedFile();
-            try {
-				documents.add(PDDocument.load(file));
-				PDDocumentCatalog docCatalog = documents.get(documents.size() - 1).getDocumentCatalog();
-				@SuppressWarnings("unchecked")
-				List<PDPage> pages = docCatalog.getAllPages();
-				int i = pageFrames.size() + 1;
-				if (i <= 0) {
-					i = 1;
-				}
-				for (PDPage page : pages) {
-					addPage(new PageFrame(i++, (PDPage) page, Application.this));
+		public void actionPerformed(ActionEvent e) {
+			if (sortBy.equals(Sorting.PAGE_NUMBER)) {
+				sort(new Comparator<PageFrame>() {
+
+				@Override
+				public int compare(PageFrame pf1, PageFrame pf2) {
+					int result = 0;
+					if (pf1.getPageNumber() < pf2.getPageNumber()) {
+						result = -1;
+					}
+					if (pf1.getPageNumber() > pf2.getPageNumber()) {
+						result = 1;
+					}
+					return result;
 				}
 				
-				drawPageFrames();
-				lastPath = file.getParent();
-				
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			} 
-            status = Status.WORKING;
-            processScene.stopAnimation();
-            showPageFrames();
-            resizeInterface();
-            System.out.println("document was opened!");
-            mainFrame.setResizable(true);
-			try {
-				thread.join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			});
+			} else if(sortBy.equals(Sorting.PAGE_NUMBER_INVERSE)) {
+				sort(new Comparator<PageFrame>() {
+
+					@Override
+					public int compare(PageFrame pf1, PageFrame pf2) {
+						int result = 0;
+						if (pf1.getPageNumber() > pf2.getPageNumber()) {
+							result = -1;
+						}
+						if (pf1.getPageNumber() < pf2.getPageNumber()) {
+							result = 1;
+						}
+						return result;
+					}
+					
+				});
 			}
+			
+		}
+		
+		private void sort(Comparator<PageFrame> comparator) {
+			contentFrame.removeAll();
+			pageFrames.sort(comparator);
+			
+			int i = 1;
+			for (PageFrame pf : pageFrames) {
+				pf.setPositionNumber(i++);
+			}
+			drawPageFrames();
 		}
 		
 	}
+	
+	
 	
 	private class DragOpeningThread implements Runnable {
 		private Thread thread;
@@ -572,6 +943,7 @@ public class Application {
 		@Override
 		public void run() {
 			hidePageFrames();
+			menuBar.setVisible(false);
 			mainFrame.setResizable(false);
             for (File file : files) {       	
             	try {
@@ -600,6 +972,7 @@ public class Application {
             resizeInterface();
             System.out.println("document was opened!");
             mainFrame.setResizable(true);
+            menuBar.setVisible(true);
 			try {
 				thread.join();
 			} catch (InterruptedException e) {
@@ -608,57 +981,52 @@ public class Application {
 		}
 		
 	}
+
 	
-	private class SavingThread implements Runnable {
-		Thread thread;
-		JFileChooser fc;
+	class CheckKeyPressing implements Runnable {
+		private Thread thread;
+		private KeyboardFocusManager keyboardFocusManager;
 		
-		public SavingThread(JFileChooser fc) {
-			this.fc = fc;
-			thread = new Thread(this, "SavingThread");
+		public CheckKeyPressing() {
+			thread = new Thread(this, "CheckKeyPressing");
+			keyboardFocusManager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+			keyboardFocusManager.addKeyEventDispatcher(new KeyEventDispatcher() {
+				
+				@Override
+				public boolean dispatchKeyEvent(KeyEvent ke) {
+					switch (ke.getID()) {
+	                case KeyEvent.KEY_PRESSED:
+	                    if (ke.getKeyCode() == KeyEvent.VK_CONTROL) {
+	                        setCtrlPressed(true);
+	                    }
+	                    break;
+
+	                case KeyEvent.KEY_RELEASED:
+	                    if (ke.getKeyCode() == KeyEvent.VK_CONTROL) {
+	                    	setCtrlPressed(false);
+	                    }
+	                    break;
+					}
+					return false;
+				}
+				
+			});
 			thread.start();
 		}
 		
 		@Override
 		public void run() {
-			hidePageFrames();
-			mainFrame.setResizable(false);
-			File file = fc.getSelectedFile();
-			PDDocument document;
 			try {
-				document = new PDDocument();
-				for (PageFrame pf : pageFrames) {
-					
-					document.importPage(pf.getPage());
-				}
-				
-				String[] splitedPath = file.getPath().split("\\.");
-				if (splitedPath[splitedPath.length - 1].equals("pdf")) {
-					document.save(file.getPath());
-				} else {
-					document.save(file.getPath() + ".pdf");	
-				}
-				
-				lastPath = file.getParent();
-				
-				document.close();
-
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			} catch (COSVisitorException e) {
-				e.printStackTrace();
-			} 
-			System.out.println("document was saved!");
-			status = Status.WORKING;
-			processScene.stopAnimation();
-            showPageFrames();
-            mainFrame.setResizable(true);
-            repaint();
-			try {
-				thread.join();
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
+			while (true) {
+
+			}
+			
 		}
 		
 	}

@@ -37,19 +37,21 @@ public class PageFrame extends JPanel{
 	private JTextField fieldPageNumber;
 	private JTextField fieldDegreeOfRotation;
 	private int rotation;
-	private String lastPath;
-	private boolean isSelected;
+	private String lastPath; // для запоминания последнего пути при открытии и сохранении
+	private boolean isSelected; // для выделения фрейма при перетаскивании мышкой
 	private int initialX;
 	private int initialY;
 	private long startTime;
 	private long deltaTime;
 	private ProcessScene processScene;
+	private boolean isMultySelect; // выбор фрейма с зажатой кнопкой Ctrl - для множественного выделения фреймов
 
 	public PageFrame(int positionNumber, PDPage page, Application app) {
 
 		this.app = app;
 		this.positionNumber = positionNumber;
 		this.page = page;
+		isMultySelect = false;
 		isSelected = false;
 		rotation = 0;
 		width = 597;
@@ -64,6 +66,18 @@ public class PageFrame extends JPanel{
 		init();
 	}
 	
+	public void setMultySelect() {
+		setBackground(Color.ORANGE);
+		isMultySelect = true;
+		this.repaint();
+	}
+	
+	public void unsetMultySelect() {
+		setBackground(new Color(209,231,81));
+		isMultySelect = false;
+		this.repaint();
+	}
+
 	private BufferedImage getBufferedImage() {
 		BufferedImage image = null;
 		try {
@@ -72,6 +86,10 @@ public class PageFrame extends JPanel{
 			e.printStackTrace();
 		}
 		return image;
+	}
+	
+	public boolean isMultySelect() {
+		return isMultySelect;
 	}
 	
 	public void setWidth(int width) {
@@ -165,6 +183,10 @@ public class PageFrame extends JPanel{
 		deleteButton.setBounds(this.width - 40, 7, 24, 24);
 	}
 	
+	public int getPageNumber() {
+		return Integer.parseInt(fieldPageNumber.getText());
+	}
+	
 	public PDPage getPage() {
 		PDPage page = this.page;
 		return page;
@@ -246,6 +268,59 @@ public class PageFrame extends JPanel{
 			}
 		}
 		
+		private class SavingThread implements Runnable {
+			Thread thread;
+			JFileChooser fc;
+			
+			public SavingThread(JFileChooser fc) {
+				this.fc = fc;
+				thread = new Thread(this, "SavingThread");
+				thread.start();
+			}
+			
+			@Override
+			public void run() {
+				app.hidePageFrames();
+				app.getMainFrame().setResizable(false);
+				app.getMenuBar().setVisible(false);
+				File file = fc.getSelectedFile();
+				PDDocument document;
+				try {
+					document = new PDDocument();
+					document.addPage(PageFrame.this.getPage());
+					
+					String[] splitedPath = file.getPath().split("\\.");
+					if (splitedPath[splitedPath.length - 1].equals("pdf")) {
+						document.save(file.getPath());
+					} else {
+						document.save(file.getPath() + ".pdf");	
+					}
+				
+					lastPath = file.getParent();
+					document.close();
+
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				} catch (COSVisitorException ex1) {
+					ex1.printStackTrace();
+				} 
+				
+				System.out.println("document was saved!");
+				app.setStatus(Status.WORKING);;
+				processScene.stopAnimation();
+		        app.showPageFrames();
+		        app.getMainFrame().setResizable(true);
+		        app.getMenuBar().setVisible(true);
+		        repaint();
+				try {
+					thread.join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			
+		}
+		
 	}
 	
 	private class DeleteButtonListener implements ActionListener{
@@ -282,31 +357,37 @@ public class PageFrame extends JPanel{
 
 		@Override
 		public void mousePressed(MouseEvent e) {
-			PageFrame.this.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, new Color(38,173,228)));
-			isSelected = true;
-			initialX = e.getX();
-			initialY = e.getY();
-			new SwapThread();
-			new MoveThread();
+			if (!app.isCtrlPressed()) {
+				PageFrame.this.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, new Color(38,173,228)));
+				isSelected = true;
+				initialX = e.getX();
+				initialY = e.getY();
+				new SwapThread();
+				new MoveThread();
+			}
 		}
 
 		@Override
 		public void mouseReleased(MouseEvent arg0) {
-			setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, new Color(0, 0, 0)));
-			isSelected = false;	
+			if (!app.isCtrlPressed()) {
+				setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, new Color(0, 0, 0)));
+				isSelected = false;	
+			}
 		}
 
 		@Override
 		public void mouseDragged(MouseEvent e) {
-			PageFrame.this.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, new Color(38,173,228)));
-			if (PageFrame.this.getParent() != null) {
-				PageFrame.this.getParent().setComponentZOrder(PageFrame.this, 0);
+			if (!app.isCtrlPressed()) {
+				PageFrame.this.setBorder(BorderFactory.createMatteBorder(3, 3, 3, 3, new Color(38,173,228)));
+				if (PageFrame.this.getParent() != null) {
+					PageFrame.this.getParent().setComponentZOrder(PageFrame.this, 0);
+				}
+				int dx = e.getX() - initialX;
+				int dy = e.getY() - initialY;
+				int x = PageFrame.this.getX() + dx;
+				int y = PageFrame.this.getY() + dy;
+				PageFrame.this.setLocation(x, y);
 			}
-			int dx = e.getX() - initialX;
-			int dy = e.getY() - initialY;
-			int x = PageFrame.this.getX() + dx;
-			int y = PageFrame.this.getY() + dy;
-			PageFrame.this.setLocation(x, y);
 		}
 
 		@Override
@@ -343,6 +424,14 @@ public class PageFrame extends JPanel{
 			DataFlavor df = new DataFlavor();
 			if (df.isFlavorJavaFileListType()) {
 				df.getHumanPresentableName();
+			}
+			
+			if (app.isCtrlPressed()) {
+				if(isMultySelect) {
+					unsetMultySelect();
+				} else {
+					setMultySelect();
+				}
 			}
 		}
 
@@ -387,6 +476,7 @@ public class PageFrame extends JPanel{
 		}
 		
 	}
+
 	
 	private class MoveThread implements Runnable {
 		private Thread thread;
@@ -476,57 +566,7 @@ public class PageFrame extends JPanel{
 		
 	}
 	
-	private class SavingThread implements Runnable {
-		Thread thread;
-		JFileChooser fc;
-		
-		public SavingThread(JFileChooser fc) {
-			this.fc = fc;
-			thread = new Thread(this, "SavingThread");
-			thread.start();
-		}
-		
-		@Override
-		public void run() {
-			app.hidePageFrames();
-			app.getMainFrame().setResizable(false);
-			
-			File file = fc.getSelectedFile();
-			PDDocument document;
-			try {
-				document = new PDDocument();
-				document.addPage(PageFrame.this.getPage());
-				
-				String[] splitedPath = file.getPath().split("\\.");
-				if (splitedPath[splitedPath.length - 1].equals("pdf")) {
-					document.save(file.getPath());
-				} else {
-					document.save(file.getPath() + ".pdf");	
-				}
-			
-				lastPath = file.getParent();
-				document.close();
-
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			} catch (COSVisitorException ex1) {
-				ex1.printStackTrace();
-			} 
-			
-			System.out.println("document was saved!");
-			app.setStatus(Status.WORKING);;
-			processScene.stopAnimation();
-	        app.showPageFrames();
-	        app.getMainFrame().setResizable(true);
-	        repaint();
-			try {
-				thread.join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
-	}
+	
 	
 }
 
