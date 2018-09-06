@@ -4,13 +4,21 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.imageio.ImageIO;
-import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JScrollPane;
 
 import org.apache.pdfbox.pdmodel.PDPage;
 
@@ -19,14 +27,17 @@ public class PDFViewer {
 	private PDPage page;
 	private JFrame viewFrame;
 	private Canvas canvas;
+	private JScrollPane sPane;
 	private BufferedImage image;
-	private JButton buttonBiger;
-	private JButton buttonSmaller;
 	private String VERSION;
+	private StateShowing state;
+	private BeautyButton intoWindowButton;
+	private BeautyButton originalSizeButton;
 	
 	public PDFViewer(PDPage page, String VERSION) {
 		this.page = page;
 		this.VERSION = VERSION;
+		state = StateShowing.INTO_WINDOW;
 		init();
 	}
 
@@ -36,9 +47,14 @@ public class PDFViewer {
 		viewFrame.setTitle("PDF++ Previewer " + VERSION);
 		Toolkit tk = Toolkit.getDefaultToolkit();
 		Dimension deffaultDimension = tk.getScreenSize();
+		viewFrame.setSize(deffaultDimension);
 		viewFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		viewFrame.setBackground(Color.DARK_GRAY);
-		viewFrame.setResizable(false);
+//		viewFrame.setAlwaysOnTop(true);
+		viewFrame.setExtendedState(viewFrame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+		viewFrame.addWindowStateListener(new WindowResizeListener());
+		viewFrame.addComponentListener(new WindowResizeListener());
+		
 		ArrayList<Image> icons = new ArrayList<Image>();
 		try {
 			Image icon16x16 = ImageIO.read(getClass().getResourceAsStream("/icon_16x16.png"));
@@ -56,84 +72,234 @@ public class PDFViewer {
 		}
 		viewFrame.setIconImages(icons);
 		
-		try {
-			image = page.convertToImage(BufferedImage.TYPE_INT_RGB, 150);
-			canvas = new Canvas();
-			canvas.setLayout(null);
-			
-			if(image.getWidth() > image.getHeight()) {
-				viewFrame.setSize(new Dimension(800, 640));
-				viewFrame.setMinimumSize(new Dimension(800, 640));
-			} else {
-				viewFrame.setSize(new Dimension(640, 800));
-				viewFrame.setMinimumSize(new Dimension(640, 800));
-
-			}
-			canvas.setBounds(0, 0, viewFrame.getWidth(), viewFrame.getHeight());
-			canvas.addDrawObject(new drawing.Image(0, 0, canvas.getWidth(), canvas.getHeight(), image));
-			viewFrame.setLocation((int)(deffaultDimension.getWidth() - viewFrame.getWidth()) / 2, 
-					(int)(deffaultDimension.getHeight() - viewFrame.getHeight()) / 2);
-			viewFrame.add(canvas);
-			
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		
-		buttonBiger = new JButton("+");
-		buttonBiger.setBounds(canvas.getWidth() - 80, 0, 60, 20);
-		buttonBiger.addActionListener(new ButtenResizeListener(1.2));
-		buttonBiger.setFocusable(false);
-		buttonBiger.setBackground(Color.DARK_GRAY);
-		buttonBiger.setForeground(Color.LIGHT_GRAY);
-		
-		buttonSmaller = new JButton("-");
-		buttonSmaller.setBounds(canvas.getWidth() - 140, 0, 60, 20);
-		buttonSmaller.addActionListener(new ButtenResizeListener(0.8));
-		buttonSmaller.setFocusable(false);
-		buttonSmaller.setBackground(Color.DARK_GRAY);
-		buttonSmaller.setForeground(Color.LIGHT_GRAY);
-		
-		canvas.add(buttonBiger);
-		canvas.add(buttonSmaller);
-		
-		viewFrame.setVisible(true);
-		
-	}
-	
-	private void resizeInterface(double x) {
-		viewFrame.setSize(new Dimension((int)(viewFrame.getWidth() * x), (int)(viewFrame.getHeight() * x)));
-		Toolkit tk = Toolkit.getDefaultToolkit();
-		Dimension deffaultDimension = tk.getScreenSize();
-		viewFrame.setLocation((int)(deffaultDimension.getWidth() - viewFrame.getWidth()) / 2, 
-					(int)(deffaultDimension.getHeight() - viewFrame.getHeight()) / 2);
-		viewFrame.remove(canvas);
-		
 		canvas = new Canvas();
 		canvas.setLayout(null);
-		canvas.setBounds(0, 0, viewFrame.getWidth(), viewFrame.getHeight());
-		canvas.addDrawObject(new drawing.Image(0, 0, canvas.getWidth(), canvas.getHeight(), image));
-		buttonBiger.setBounds(canvas.getWidth() - 80, 0, 60, 20);
-		buttonSmaller.setBounds(canvas.getWidth() - 140, 0, 60, 20);
+		canvas.setBackground(new Color(50, 50, 50));
 		
-		canvas.add(buttonSmaller);
-		canvas.add(buttonBiger);
-		viewFrame.add(canvas);
-		viewFrame.repaint();
+		sPane = new JScrollPane(canvas, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
+				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		sPane.setBackground(new Color(50, 50, 50));
+		sPane.setBounds(0, 0, viewFrame.getWidth(), viewFrame.getHeight());
+		sPane.getVerticalScrollBar().setUnitIncrement(16);
+		sPane.getHorizontalScrollBar().setUnitIncrement(16);
+		sPane.addMouseWheelListener(new MouseWheelListener() {
+			
+			@Override
+			public void mouseWheelMoved(MouseWheelEvent e) {
+				sPane.repaint();
+			}
+		});
+		
+		sPane.getHorizontalScrollBar().addMouseListener(new ScrollPaneListener());
+		sPane.getVerticalScrollBar().addMouseListener(new ScrollPaneListener());
+		
+		// buttons
+		intoWindowButton = new BeautyButton("/into_window_64x64.png", "/into_window_rollover_64x64.png", "Вписать в размеры окна");
+		intoWindowButton.setBounds(viewFrame.getWidth() - 172, 5, 64, 64);
+		intoWindowButton.addActionListener(new IntoWindowButtonListener());
+		
+		originalSizeButton = new BeautyButton("/original_size_64x64.png", "/original_size_rollover_64x64.png", "В оригинальном размере");
+		originalSizeButton.setBounds(viewFrame.getWidth() - 94, 5, 64, 64);
+		originalSizeButton.addActionListener(new OriginalSizeButtonListener());
+		
+		sPane.add(intoWindowButton);
+		sPane.add(originalSizeButton);
+		defaultOrderComponents();
+		viewFrame.add(sPane);
+
+		viewFrame.setVisible(true);
+		new LoadingImageThread();
+		
 	}
 	
-	private class ButtenResizeListener implements ActionListener {
-
-		private double x;
+	private double getRelation(int width, int height) {
 		
-		public ButtenResizeListener(double x) {
-			this.x = x;
+		return (double)width / (double)height;
+	}
+	
+	private void resizeInterface() {
+		canvas.setBounds(0, 0, viewFrame.getWidth(), viewFrame.getHeight());
+		canvas.clearDrawObjects();
+		
+		if (state.equals(StateShowing.INTO_WINDOW)) {
+			if (image.getHeight() < canvas.getHeight()) {
+				canvas.addDrawObject(new drawing.Image((canvas.getWidth() - image.getWidth()) / 2, 
+						(canvas.getHeight() - image.getHeight()) / 2, image));
+			} else {
+				int y = (int) ((canvas.getWidth() - canvas.getHeight() * getRelation(image.getWidth(), image.getHeight())) / 2);
+				int height = canvas.getHeight();
+				int width = (int)(canvas.getHeight() * getRelation(image.getWidth(), image.getHeight()));
+				canvas.addDrawObject(new drawing.Image(y, 0, width, height, image));
+				intoWindowButton.setBounds(viewFrame.getWidth() - 178, 5, 64, 64);
+				originalSizeButton.setBounds(viewFrame.getWidth() - 102, 5, 64, 64);
+				canvas.setPreferredSize(new Dimension(0, 0));
+				sPane.setBounds(0, 0, viewFrame.getWidth(), viewFrame.getHeight());
+				sPane.updateUI();
+			}
+		} else if(state.equals(StateShowing.ORIGINAL_SIZE)) {
+			int x = 0;
+			int y = 0;
+			
+			if (image.getWidth() < canvas.getWidth()) {
+				x = (canvas.getWidth() - image.getWidth()) / 2;
+			} else {
+				x = 0;
+			}
+			
+			if (image.getHeight() < canvas.getHeight()) {
+				y = (canvas.getHeight() - image.getHeight() / 2); 
+			} else {
+				y = 0;
+			}
+			intoWindowButton.setBounds(viewFrame.getWidth() - 178, 5, 64, 64);
+			originalSizeButton.setBounds(viewFrame.getWidth() - 102, 5, 64, 64);
+			canvas.addDrawObject(new drawing.Image(x, y, image));
+			canvas.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
+			
+			if (viewFrame.getExtendedState() != JFrame.MAXIMIZED_BOTH) {
+				sPane.setBounds(0, 0, viewFrame.getWidth() - 15, viewFrame.getHeight() - 37);
+			} else {
+				sPane.setBounds(0, 0, viewFrame.getWidth() - 15, viewFrame.getHeight() - 37);
+			}
+			
+			sPane.updateUI();
+		}
+		defaultOrderComponents();
+		viewFrame.setResizable(true);
+		viewFrame.repaint();
+		
+	}
+	
+	private class LoadingImageThread implements Runnable {
+		private Thread thread;
+		
+		public LoadingImageThread() {
+			thread = new Thread(this, "LoadingImageThread");
+			thread.start();
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 		
 		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			resizeInterface(x);
+		public void run() {
+			viewFrame.setResizable(false);
+			try {
+				if (image == null) {
+					image = page.convertToImage(BufferedImage.TYPE_INT_RGB, 300);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			canvas.clearDrawObjects();
+			if (state.equals(StateShowing.INTO_WINDOW)) {
+				if (image.getHeight() < canvas.getHeight()) {
+					canvas.addDrawObject(new drawing.Image((canvas.getWidth() - image.getWidth()) / 2, 
+							(canvas.getHeight() - image.getHeight()) / 2, image));
+				} else {
+					int y = (int) ((canvas.getWidth() - canvas.getHeight() * getRelation(image.getWidth(), image.getHeight())) / 2);
+					int height = canvas.getHeight();
+					int width = (int)(canvas.getHeight() * getRelation(image.getWidth(), image.getHeight()));
+					canvas.addDrawObject(new drawing.Image(y, 0, width, height, image));
+				}
+			}
+			
+			canvas.repaint();
+			defaultOrderComponents();
+			viewFrame.setResizable(true);
 		}
 		
+	}
+	
+	private class WindowResizeListener extends ComponentAdapter implements WindowStateListener {
+
+		@Override
+		public void windowStateChanged(WindowEvent e) {
+			resizeInterface();
+		}
+		
+		@Override
+		public void componentResized(ComponentEvent e) {
+			super.componentResized(e);
+			resizeInterface();
+		}
+	
+	}
+	
+	private void defaultOrderComponents() {
+		sPane.setComponentZOrder(intoWindowButton, 0);
+		sPane.setComponentZOrder(originalSizeButton, 1);
+	}
+	
+	private enum StateShowing {
+		INTO_WINDOW,
+		ORIGINAL_SIZE;
+	}
+	
+	private class IntoWindowButtonListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			intoWindowButton.setSelected(false);
+			if (!state.equals(StateShowing.INTO_WINDOW)) {
+				state = StateShowing.INTO_WINDOW;
+				resizeInterface();
+			}
+			
+		}
+		
+	}
+	
+	private class OriginalSizeButtonListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			originalSizeButton.setSelected(false);
+			if (!state.equals(StateShowing.ORIGINAL_SIZE)) {
+				state = StateShowing.ORIGINAL_SIZE;
+				resizeInterface();
+			}	
+		}
+	}
+	
+	private class ScrollPaneListener implements MouseListener {
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseEntered(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mouseExited(MouseEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			intoWindowButton.setVisible(false);
+			originalSizeButton.setVisible(false);
+			sPane.repaint();
+			
+			
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			intoWindowButton.setVisible(true);
+			originalSizeButton.setVisible(true);	
+			sPane.repaint();
+			
+		}
+
 	}
 	
 }

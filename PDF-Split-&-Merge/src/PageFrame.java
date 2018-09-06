@@ -464,15 +464,14 @@ public class PageFrame extends JPanel{
 
 		@Override
 		public void mousePressed(MouseEvent e) {
-			// TODO Auto-generated method stub
+			@SuppressWarnings("unused")
+			PDFViewer viewer = new PDFViewer(getPage(), app.getVersion());
 			
 		}
 
 		@Override
 		public void mouseReleased(MouseEvent e) {
-			@SuppressWarnings("unused")
-			PDFViewer viewer = new PDFViewer(getPage(), app.getVersion());
-			
+			// TODO Auto-generated method stub
 		}
 		
 	}

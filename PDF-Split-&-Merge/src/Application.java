@@ -67,7 +67,7 @@ public class Application {
 	private BeautyButton saveButton;
 
 	public Application() {
-		VERSION = "v0.4.0-alpha";
+		VERSION = "v0.5.0-alpha";
 		
 		new CheckKeyPressing();
 		
@@ -638,7 +638,7 @@ public class Application {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			saveButton.setSelected(false);
-			if (pageFrames.size() > 0) {
+			if (pageFrames.size() > 0 && isHasMultySelectPages()) {
 				JFileChooser fc;
 				if (lastPath == null) {
 					fc = new JFileChooser();
@@ -656,11 +656,25 @@ public class Application {
 				}
 			} else {
 				JOptionPane.showMessageDialog(mainFrame,
-					    "Документ должен содержать минимум одну страницу.",
+					    "Документ должен содержать минимум одну выделенную страницу.",
 					    "Сохранение файла",
 					    JOptionPane.WARNING_MESSAGE);
 			}
 
+		}
+		
+		private boolean isHasMultySelectPages() {
+			
+			boolean hasIt = false;
+			
+			for (PageFrame pf : pageFrames) {
+				if (pf.isMultySelect()) {
+					hasIt = true;
+					break;
+				}
+			}
+			
+			return hasIt;
 		}
 		
 		private class SavingSelectedThread implements Runnable {
@@ -867,7 +881,6 @@ public class Application {
 		
 	}
 
-	
 	private class SortByOrder implements ActionListener{
 
 		private Sorting sortBy;
@@ -927,8 +940,6 @@ public class Application {
 		
 	}
 	
-	
-	
 	private class DragOpeningThread implements Runnable {
 		private Thread thread;
 		private File[] files;
@@ -982,8 +993,7 @@ public class Application {
 		
 	}
 
-	
-	class CheckKeyPressing implements Runnable {
+	private class CheckKeyPressing implements Runnable {
 		private Thread thread;
 		private KeyboardFocusManager keyboardFocusManager;
 		
@@ -1030,5 +1040,4 @@ public class Application {
 		}
 		
 	}
-	
 }
