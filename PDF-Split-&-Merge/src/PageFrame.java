@@ -59,7 +59,7 @@ public class PageFrame extends JPanel{
 		image = getBufferedImage();
 		setBorder(BorderFactory.createMatteBorder(2, 2, 2, 2, new Color(0, 0, 0)));
 		setLayout(null);
-		setBackground(new Color(209,231,81));
+		setBackground(new Color(0xD4FA89));
 		addMouseListener(new PageFrameMouseListener());
 		addMouseListener(new DragPageFrameMouseListener());
 		addMouseMotionListener(new DragPageFrameMouseListener());
@@ -67,13 +67,13 @@ public class PageFrame extends JPanel{
 	}
 	
 	public void setMultySelect() {
-		setBackground(Color.ORANGE);
+		setBackground(new Color(0xFFEB8C));
 		isMultySelect = true;
 		this.repaint();
 	}
 	
 	public void unsetMultySelect() {
-		setBackground(new Color(209,231,81));
+		setBackground(new Color(0xD4FA89));
 		isMultySelect = false;
 		this.repaint();
 	}
@@ -107,6 +107,7 @@ public class PageFrame extends JPanel{
 		
 		fieldPageNumber = new JTextField();
 		fieldPageNumber.setBounds(300, 25, 30, 20);
+		fieldPageNumber.setBackground(Color.WHITE);
 		fieldPageNumber.setText(Integer.toString(positionNumber));
 		fieldPageNumber.setHorizontalAlignment(JTextField.CENTER);
 		fieldPageNumber.setEditable(false);
@@ -118,6 +119,7 @@ public class PageFrame extends JPanel{
 		
 		fieldDegreeOfRotation = new JTextField();
 		fieldDegreeOfRotation.setBounds(300, 55, 30, 20);
+		fieldDegreeOfRotation.setBackground(Color.WHITE);
 		fieldDegreeOfRotation.setText("0");
 		fieldDegreeOfRotation.setHorizontalAlignment(JTextField.CENTER);
 		fieldDegreeOfRotation.setEditable(false);
@@ -168,7 +170,7 @@ public class PageFrame extends JPanel{
 	
 	private void initImagePreview() {
 		imagePreview = new Canvas();
-		imagePreview.setBackground(new Color(77,188,233, 25));
+		imagePreview.setBackground(new Color(0xC3F461));
 		imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
 		imagePreview.setBounds(25, 10, 180, 180);
 		imagePreview.addMouseListener(new CanvasMouseListener());

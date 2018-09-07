@@ -33,6 +33,7 @@ public class PDFViewer {
 	private StateShowing state;
 	private BeautyButton intoWindowButton;
 	private BeautyButton originalSizeButton;
+	private BeautyButton wideSizeButton;
 	
 	public PDFViewer(PDPage page, String VERSION) {
 		this.page = page;
@@ -48,6 +49,7 @@ public class PDFViewer {
 		Toolkit tk = Toolkit.getDefaultToolkit();
 		Dimension deffaultDimension = tk.getScreenSize();
 		viewFrame.setSize(deffaultDimension);
+		viewFrame.setMinimumSize(new Dimension(600, 480));
 		viewFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		viewFrame.setBackground(Color.DARK_GRAY);
 //		viewFrame.setAlwaysOnTop(true);
@@ -95,15 +97,19 @@ public class PDFViewer {
 		
 		// buttons
 		intoWindowButton = new BeautyButton("/into_window_64x64.png", "/into_window_rollover_64x64.png", "Вписать в размеры окна");
-		intoWindowButton.setBounds(viewFrame.getWidth() - 172, 5, 64, 64);
 		intoWindowButton.addActionListener(new IntoWindowButtonListener());
 		
 		originalSizeButton = new BeautyButton("/original_size_64x64.png", "/original_size_rollover_64x64.png", "В оригинальном размере");
-		originalSizeButton.setBounds(viewFrame.getWidth() - 94, 5, 64, 64);
 		originalSizeButton.addActionListener(new OriginalSizeButtonListener());
+		
+		wideSizeButton = new BeautyButton("/width_size_64x64.png", "/width_size_rollover_64x64.png", "По ширине окна");
+		wideSizeButton.addActionListener(new WideSizeButtonListener());
+		
+		reboundsButtons();
 		
 		sPane.add(intoWindowButton);
 		sPane.add(originalSizeButton);
+		sPane.add(wideSizeButton);
 		defaultOrderComponents();
 		viewFrame.add(sPane);
 
@@ -117,6 +123,14 @@ public class PDFViewer {
 		return (double)width / (double)height;
 	}
 	
+	private void reboundsButtons() {
+		int x = sPane.getWidth() - 90;
+		int s = 5;
+		intoWindowButton.setBounds(x, 5 + s, 64, 64);
+		wideSizeButton.setBounds(x, 83 + s, 64, 64);
+		originalSizeButton.setBounds(x, 166 + s, 64, 64);
+	}
+	
 	private void resizeInterface() {
 		canvas.setBounds(0, 0, viewFrame.getWidth(), viewFrame.getHeight());
 		canvas.clearDrawObjects();
@@ -125,13 +139,13 @@ public class PDFViewer {
 			if (image.getHeight() < canvas.getHeight()) {
 				canvas.addDrawObject(new drawing.Image((canvas.getWidth() - image.getWidth()) / 2, 
 						(canvas.getHeight() - image.getHeight()) / 2, image));
+				reboundsButtons();
 			} else {
 				int y = (int) ((canvas.getWidth() - canvas.getHeight() * getRelation(image.getWidth(), image.getHeight())) / 2);
 				int height = canvas.getHeight();
 				int width = (int)(canvas.getHeight() * getRelation(image.getWidth(), image.getHeight()));
 				canvas.addDrawObject(new drawing.Image(y, 0, width, height, image));
-				intoWindowButton.setBounds(viewFrame.getWidth() - 178, 5, 64, 64);
-				originalSizeButton.setBounds(viewFrame.getWidth() - 102, 5, 64, 64);
+				reboundsButtons();
 				canvas.setPreferredSize(new Dimension(0, 0));
 				sPane.setBounds(0, 0, viewFrame.getWidth(), viewFrame.getHeight());
 				sPane.updateUI();
@@ -151,8 +165,7 @@ public class PDFViewer {
 			} else {
 				y = 0;
 			}
-			intoWindowButton.setBounds(viewFrame.getWidth() - 178, 5, 64, 64);
-			originalSizeButton.setBounds(viewFrame.getWidth() - 102, 5, 64, 64);
+			
 			canvas.addDrawObject(new drawing.Image(x, y, image));
 			canvas.setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
 			
@@ -161,7 +174,41 @@ public class PDFViewer {
 			} else {
 				sPane.setBounds(0, 0, viewFrame.getWidth() - 15, viewFrame.getHeight() - 37);
 			}
+			reboundsButtons();
+			sPane.updateUI();
+		} else if (state.equals(StateShowing.WIDE_WINDOW)) {
 			
+			if (viewFrame.getExtendedState() != JFrame.MAXIMIZED_BOTH) {
+				sPane.setBounds(0, 0, viewFrame.getWidth() - 15, viewFrame.getHeight() - 37);
+			} else {
+				sPane.setBounds(0, 0, viewFrame.getWidth() - 15, viewFrame.getHeight() - 37);
+			}
+			
+			int width = 0;
+			int height = 0;
+
+			width = viewFrame.getWidth();
+			height = (int)(width * getRelation(image.getHeight(), image.getWidth()));
+			
+			int x = 0;
+			int y = 0;
+			
+			if (width < sPane.getWidth()) {
+				x = (sPane.getWidth() - width) / 2;
+			} else {
+				x = 0;
+			}
+			
+			if (height < sPane.getHeight()) {
+				y = (sPane.getHeight() - height) / 2; 
+			} else {
+				y = 0;
+			}
+			
+			canvas.addDrawObject(new drawing.Image(x, y, width, height, image));
+			canvas.setPreferredSize(new Dimension(0, height));
+			
+			reboundsButtons();
 			sPane.updateUI();
 		}
 		defaultOrderComponents();
@@ -230,12 +277,14 @@ public class PDFViewer {
 	
 	private void defaultOrderComponents() {
 		sPane.setComponentZOrder(intoWindowButton, 0);
-		sPane.setComponentZOrder(originalSizeButton, 1);
+		sPane.setComponentZOrder(wideSizeButton, 0);
+		sPane.setComponentZOrder(originalSizeButton, 0);
 	}
 	
 	private enum StateShowing {
 		INTO_WINDOW,
-		ORIGINAL_SIZE;
+		ORIGINAL_SIZE,
+		WIDE_WINDOW;
 	}
 	
 	private class IntoWindowButtonListener implements ActionListener {
@@ -264,6 +313,19 @@ public class PDFViewer {
 		}
 	}
 	
+	private class WideSizeButtonListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			wideSizeButton.setSelected(false);
+			if (!state.equals(StateShowing.WIDE_WINDOW)) {
+				state = StateShowing.WIDE_WINDOW;
+				resizeInterface();
+			}		
+		}
+		
+	}
+	
 	private class ScrollPaneListener implements MouseListener {
 		@Override
 		public void mouseClicked(MouseEvent e) {
@@ -286,6 +348,7 @@ public class PDFViewer {
 		@Override
 		public void mousePressed(MouseEvent e) {
 			intoWindowButton.setVisible(false);
+			wideSizeButton.setVisible(false);
 			originalSizeButton.setVisible(false);
 			sPane.repaint();
 			
@@ -295,6 +358,7 @@ public class PDFViewer {
 		@Override
 		public void mouseReleased(MouseEvent e) {
 			intoWindowButton.setVisible(true);
+			wideSizeButton.setVisible(true);
 			originalSizeButton.setVisible(true);	
 			sPane.repaint();
 			

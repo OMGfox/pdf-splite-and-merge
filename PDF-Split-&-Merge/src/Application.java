@@ -67,7 +67,7 @@ public class Application {
 	private BeautyButton saveButton;
 
 	public Application() {
-		VERSION = "v0.5.0-alpha";
+		VERSION = "v0.5.1-alpha";
 		
 		new CheckKeyPressing();
 		
@@ -203,6 +203,7 @@ public class Application {
 		numPagesLable.setBounds(mainFrame.getWidth() - 195, 10, 80, 20);
 		numPages = new JTextField();
 		numPages.setEditable(false);
+		numPages.setBackground(Color.WHITE);
 		numPages.setText("0");
 		numPages.setHorizontalAlignment(JTextField.RIGHT);
 		numPages.setBounds(mainFrame.getWidth() - 135, 10, 40, 20);
