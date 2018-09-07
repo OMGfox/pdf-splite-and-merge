@@ -67,7 +67,7 @@ public class Application {
 	private BeautyButton saveButton;
 
 	public Application() {
-		VERSION = "v0.5.1-alpha";
+		VERSION = "v0.5.2-alpha";
 		
 		new CheckKeyPressing();
 		
@@ -130,13 +130,20 @@ public class Application {
 		menuItemOpen.addActionListener(new OpenListener());
 		menuFile.add(menuItemOpen);
 		
+		JMenu menuSave = new JMenu("Сохранить");
+		menuFile.add(menuSave);
+		
 		JMenuItem menuItemSaveAs = new JMenuItem("Сохранить как...");
 		menuItemSaveAs.addActionListener(new SaveListener());
-		menuFile.add(menuItemSaveAs);
+		menuSave.add(menuItemSaveAs);
 		
 		JMenuItem menuItemSaveSelectedAs = new JMenuItem("Сохранить выделенные как...");
 		menuItemSaveSelectedAs.addActionListener(new SaveSelectedListener());
-		menuFile.add(menuItemSaveSelectedAs);
+		menuSave.add(menuItemSaveSelectedAs);
+		
+		JMenuItem menuSaveAllToSingleFile = new JMenuItem("Сохранить каждую страницу в отдельный файл");
+		menuSaveAllToSingleFile.addActionListener(new SaveAllToSingleFileListener());
+		menuSave.add(menuSaveAllToSingleFile);
 		
 		menuFile.addSeparator();
 		
@@ -156,10 +163,6 @@ public class Application {
 		JMenuItem menuDeleteAll = new JMenuItem("Очистить список");
 		menuDeleteAll.addActionListener(new DeleteAllListener());
 		menuAdditional.add(menuDeleteAll);
-		
-		JMenuItem menuSaveAllToSingleFile = new JMenuItem("Сохранить каждую страницу в отдельный файл");
-		menuSaveAllToSingleFile.addActionListener(new SaveAllToSingleFileListener());
-		menuAdditional.add(menuSaveAllToSingleFile);
 		
 		// Sorting
 		menuAdditional.addSeparator();
@@ -489,7 +492,6 @@ public class Application {
 			repaint();
 			
 			openButton.setSelected(false);	
-			
 		}	
 		
 		private class OpeningThread implements Runnable {
@@ -509,7 +511,9 @@ public class Application {
 				menuBar.setVisible(false);
 	            File file = fc.getSelectedFile();
 	            try {
-					documents.add(PDDocument.load(file));
+	            	PDDocument document = PDDocument.load(file);
+	 
+					documents.add(document);
 					PDDocumentCatalog docCatalog = documents.get(documents.size() - 1).getDocumentCatalog();
 					@SuppressWarnings("unchecked")
 					List<PDPage> pages = docCatalog.getAllPages();

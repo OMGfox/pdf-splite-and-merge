@@ -67,7 +67,7 @@ public class PageFrame extends JPanel{
 	}
 	
 	public void setMultySelect() {
-		setBackground(new Color(0xFFEB8C));
+		setBackground(Color.ORANGE);
 		isMultySelect = true;
 		this.repaint();
 	}
@@ -170,7 +170,7 @@ public class PageFrame extends JPanel{
 	
 	private void initImagePreview() {
 		imagePreview = new Canvas();
-		imagePreview.setBackground(new Color(0xC3F461));
+		imagePreview.setBackground(new Color(0, 0, 0, 50));
 		imagePreview.addDrawObject(new drawing.Image((180 - image.getWidth()) / 2, (180 - image.getHeight()) / 2, image));
 		imagePreview.setBounds(25, 10, 180, 180);
 		imagePreview.addMouseListener(new CanvasMouseListener());
@@ -566,8 +566,6 @@ public class PageFrame extends JPanel{
 		}
 		
 	}
-	
-	
 	
 }
 
