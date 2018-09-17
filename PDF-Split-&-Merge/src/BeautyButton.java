@@ -27,5 +27,6 @@ public class BeautyButton extends JToggleButton{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
 	}
 }

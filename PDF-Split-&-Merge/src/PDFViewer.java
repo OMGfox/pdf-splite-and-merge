@@ -20,11 +20,9 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 
-import org.apache.pdfbox.pdmodel.PDPage;
-
 public class PDFViewer {
 	
-	private PDPage page;
+	private PageFrame pf;
 	private JFrame viewFrame;
 	private Canvas canvas;
 	private JScrollPane sPane;
@@ -35,8 +33,8 @@ public class PDFViewer {
 	private BeautyButton originalSizeButton;
 	private BeautyButton wideSizeButton;
 	
-	public PDFViewer(PDPage page, String VERSION) {
-		this.page = page;
+	public PDFViewer(String VERSION, PageFrame pf) {
+		this.pf = pf;
 		this.VERSION = VERSION;
 		state = StateShowing.INTO_WINDOW;
 		init();
@@ -45,7 +43,7 @@ public class PDFViewer {
 	private void init() {
 		viewFrame = new JFrame();
 		viewFrame.setLayout(null);
-		viewFrame.setTitle("PDF++ Previewer " + VERSION);
+		viewFrame.setTitle("PDF++ Viewer " + VERSION);
 		Toolkit tk = Toolkit.getDefaultToolkit();
 		Dimension deffaultDimension = tk.getScreenSize();
 		viewFrame.setSize(deffaultDimension);
@@ -136,20 +134,23 @@ public class PDFViewer {
 		canvas.clearDrawObjects();
 		
 		if (state.equals(StateShowing.INTO_WINDOW)) {
-			if (image.getHeight() < canvas.getHeight()) {
-				canvas.addDrawObject(new drawing.Image((canvas.getWidth() - image.getWidth()) / 2, 
-						(canvas.getHeight() - image.getHeight()) / 2, image));
-				reboundsButtons();
-			} else {
-				int y = (int) ((canvas.getWidth() - canvas.getHeight() * getRelation(image.getWidth(), image.getHeight())) / 2);
-				int height = canvas.getHeight();
-				int width = (int)(canvas.getHeight() * getRelation(image.getWidth(), image.getHeight()));
-				canvas.addDrawObject(new drawing.Image(y, 0, width, height, image));
-				reboundsButtons();
-				canvas.setPreferredSize(new Dimension(0, 0));
-				sPane.setBounds(0, 0, viewFrame.getWidth(), viewFrame.getHeight());
-				sPane.updateUI();
+			if (image != null && canvas != null) {
+				if (image.getHeight() < canvas.getHeight()) {
+					canvas.addDrawObject(new drawing.Image((canvas.getWidth() - image.getWidth()) / 2, 
+							(canvas.getHeight() - image.getHeight()) / 2, image));
+					reboundsButtons();
+				} else {
+					int y = (int) ((canvas.getWidth() - canvas.getHeight() * getRelation(image.getWidth(), image.getHeight())) / 2);
+					int height = canvas.getHeight();
+					int width = (int)(canvas.getHeight() * getRelation(image.getWidth(), image.getHeight()));
+					canvas.addDrawObject(new drawing.Image(y, 0, width, height, image));
+					reboundsButtons();
+					canvas.setPreferredSize(new Dimension(0, 0));
+					sPane.setBounds(0, 0, viewFrame.getWidth(), viewFrame.getHeight());
+					sPane.updateUI();
+				}
 			}
+
 		} else if(state.equals(StateShowing.ORIGINAL_SIZE)) {
 			int x = 0;
 			int y = 0;
@@ -233,12 +234,8 @@ public class PDFViewer {
 		@Override
 		public void run() {
 			viewFrame.setResizable(false);
-			try {
-				if (image == null) {
-					image = page.convertToImage(BufferedImage.TYPE_INT_RGB, 300);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
+			if (image == null) {
+				image = pf.getHighResolutionImage();
 			}
 			canvas.clearDrawObjects();
 			if (state.equals(StateShowing.INTO_WINDOW)) {
