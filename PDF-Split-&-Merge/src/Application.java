@@ -63,7 +63,7 @@ public class Application {
 	
 	
 	public Application() {
-		VERSION = "v0.6.5-alpha";
+		VERSION = "(v0.6.7)";
 		
 		new CheckKeyPressing();
 		
@@ -400,7 +400,9 @@ public class Application {
 			pageManager.documentsClear();
 			deleteAllButton.setSelected(false);
 			hideRotationButtons();
+			contentFrame.setPreferredSize(new Dimension(0, 0));
 			contentFrame.repaint();
+			sPane.updateUI();
 			status = Status.EMPTY;
 		}
 	}

@@ -43,7 +43,7 @@ public class PDFViewer {
 	private void init() {
 		viewFrame = new JFrame();
 		viewFrame.setLayout(null);
-		viewFrame.setTitle("PDF++ Viewer " + VERSION);
+		viewFrame.setTitle("PDF++ Viewer " + VERSION + "  -  " + pf.getDocName());
 		Toolkit tk = Toolkit.getDefaultToolkit();
 		Dimension deffaultDimension = tk.getScreenSize();
 		viewFrame.setSize(deffaultDimension);

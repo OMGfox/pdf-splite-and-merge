@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
@@ -27,6 +28,7 @@ public class PageFrameManager {
 	private JTextField numPages;
 	private LinkedList<PageFrame> pageFrames;
 	private LinkedList<PDDocument> documents;
+	private Color lastRandomColor;
 	
 	public PageFrameManager(Application application) {
 		this.application = application;
@@ -254,7 +256,6 @@ public class PageFrameManager {
 	public void loadFile(File file) {
         try {
         	PDDocument document = PDDocument.load(file);
-
 			documents.add(document);
 			PDPageTree pages = document.getPages();
 			int i = pageFrames.size() + 1;
@@ -262,9 +263,22 @@ public class PageFrameManager {
 				i = 1;
 			}
 			int index = 0;
+			
+			Color color = null;
+			if(lastRandomColor == null) {
+				color = new Color(209,231,81);
+				lastRandomColor = color;
+			} else {
+				color = getRandomColor();
+				while (color.equals(lastRandomColor)) {
+					color = getRandomColor();
+				}
+				lastRandomColor = color;
+			}
+			
 			for (PDPage page : pages) {
 				BufferedImage image = new PDFRenderer(document).renderImageWithDPI(index++, 75, ImageType.RGB);
-				addPage(new PageFrame(i++, (PDPage) page, PageFrameManager.this, image, document));
+				addPage(new PageFrame(i++, (PDPage) page, PageFrameManager.this, image, document, file.getName(), color));
 			}
 			
 			drawPageFrames();
@@ -272,6 +286,37 @@ public class PageFrameManager {
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		} 
+	}
+	
+	private Color getRandomColor() {
+		Color color = new Color(209,231,81);
+		int randInt = (int)(Math.random() * 100 % 7);
+		switch (randInt) {
+		case 0:
+			color = new Color(209,231,81);
+			break;
+		case 1:
+			color = Color.ORANGE;
+			break;
+		case 2:
+			color = Color.YELLOW;
+			break;
+		case 3:
+			color = Color.CYAN;
+			break;
+		case 4:
+			color = Color.GREEN;
+			break;
+		case 5:
+			color = Color.MAGENTA;
+			break;
+		case 6:
+			color = Color.PINK;
+			break;
+		default:
+			break;
+		}
+		return color;
 	}
 	
 	public void swapPages(int first, int second) {

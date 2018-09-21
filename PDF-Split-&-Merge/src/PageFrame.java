@@ -56,15 +56,19 @@ public class PageFrame extends JPanel{
 	private int frameSize;
 	private int canvasSize;
 	private int buttonPanelSizeWidth;
+	private String docName;
+	private Color frameColor;
 	
 	
 	public PageFrame(int positionNumber, PDPage page, PageFrameManager pageManager, 
-			BufferedImage image, PDDocument document) {
+			BufferedImage image, PDDocument document, String docName, Color frameColor) {
 		this.document = document;
 		this.pageManager = pageManager;
 		this.positionNumber = positionNumber;
 		this.page = page;
 		this.image = image;
+		this.docName = docName;
+		this.frameColor = frameColor;
 		isMultySelect = false;
 		isSelected = false;
 		rotation = page.getRotation();
@@ -109,7 +113,8 @@ public class PageFrame extends JPanel{
 		
 		fieldPageNumber = new JTextField();
 		fieldPageNumber.setBounds(3, 3, 30, 20);
-		fieldPageNumber.setBackground(new Color(209,231,81));
+//		fieldPageNumber.setBackground(new Color(209,231,81));
+		fieldPageNumber.setBackground(frameColor);
 		fieldPageNumber.setText(Integer.toString(positionNumber));
 		fieldPageNumber.setHorizontalAlignment(JTextField.CENTER);
 		fieldPageNumber.setEditable(false);
@@ -217,6 +222,15 @@ public class PageFrame extends JPanel{
 	}
 
 	// getters
+	
+	public String getDocName() {
+		return docName;
+	}
+	
+	public PDDocument getDocument() {
+		return document;
+	}
+	
 	public Canvas getImagePreview() {
 		return imagePreview;
 	}
@@ -263,6 +277,10 @@ public class PageFrame extends JPanel{
 	}
 	
 	// setters
+	
+	public void setFrameSize(int frameSize) {
+		this.frameSize = frameSize;
+	}
 	
 	public void setRotation(int rotation) {
 		this.rotation = rotation;
